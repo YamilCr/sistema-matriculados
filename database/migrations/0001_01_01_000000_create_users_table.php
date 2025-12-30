@@ -18,8 +18,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_active')->default(true);
-            $table->foreignId('role_id')->constrained('roles', 'id_rol');
-            $table->foreignId('member_id')->nullable()->constrained('members', 'id_member');            
+            $table->foreignId('role_id')->constrained();
+            $table->foreignId('member_id')->nullable()->constrained();            
             $table->rememberToken();
             $table->timestamps();
         });

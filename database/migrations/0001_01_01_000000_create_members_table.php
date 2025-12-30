@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('phone')->nullable();
             
             // Llaves Foráneas (FK)
-            $table->foreignId('location_id')->constrained('locations', 'id_location');
-            $table->foreignId('account_status_id')->constrained('account_statuses', 'id_account_status');
+            $table->foreignId('location_id')->constrained();
+            $table->foreignId('account_status_id')->constrained();
 
             $table->boolean('is_active')->default(true);
             $table->timestamps();
