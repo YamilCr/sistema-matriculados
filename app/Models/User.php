@@ -19,10 +19,25 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'name',  // Asegúrate de que esté aquí
         'email',
         'password',
+        'role_id',
+        'member_id',
+        'is_active',
     ];
+
+    // Relación con el Rol (Administrador, etc.)
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    // Relación con los datos de Matriculado (si aplica)
+    public function member(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'member_id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.
