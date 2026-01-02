@@ -1,14 +1,22 @@
 <script setup>
+import accountstatuses from '@/routes/accountstatuses';
+import locations from '@/routes/locations';
+import members from '@/routes/members';
+import users from '@/routes/users';
 import { Head, Link } from '@inertiajs/vue3';
+// import { log } from 'console';
 
 // Recibimos estadísticas desde el controlador para que se vea real
 const props = defineProps({
     stats: Object,
     auth: Object
 });
+
+
 </script>
 
 <template>
+    
     <Head title="Panel de Administración" />
 
     <div class="p-8 bg-gray-100 min-h-screen">
@@ -37,10 +45,10 @@ const props = defineProps({
         <div class="bg-white p-6 rounded-xl shadow-sm">
             <h2 class="text-xl font-bold mb-4">Gestión del Sistema</h2>
             <div class="flex flex-wrap gap-4">
-                <Link :href="route('members.index')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Ver Matriculados</Link>
-                <Link :href="route('users.index')" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">Gestionar Usuarios</Link>
-                <Link :href="route('locations.index')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">Configurar Localidades</Link>
-                <Link :href="route('account-statuses.index')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">Estados de Cuenta</Link>
+                <Link :href="members.index()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Ver Matriculados</Link>
+                <Link :href="users.index()" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">Gestionar Usuarios</Link>
+                <Link :href="locations.index()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">Configurar Localidades</Link>
+                <Link :href="accountstatuses.index()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">Estados de Cuenta</Link>
             </div>
         </div>
     </div>

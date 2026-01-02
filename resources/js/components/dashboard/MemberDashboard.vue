@@ -1,10 +1,27 @@
-<script setup>
-import { Head } from '@inertiajs/vue3';
+<script setup lang="ts">
+import { Head } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
 
-const props = defineProps({
-    auth: Object,
-    myMemberData: Object
-});
+const { auth } = usePage().props as {
+  auth: {
+    user: {
+      name: string
+    }
+  }
+}
+
+defineProps<{
+  member: {
+    registration_number?: string
+    account_status_id: number
+    account_status: {
+      name: string
+    }
+    location: {
+      name: string
+    }
+  }
+}>()
 </script>
 
 <template>
@@ -22,17 +39,17 @@ const props = defineProps({
             <div class="space-y-4">
                 <div class="flex justify-between">
                     <span class="text-gray-500 text-sm">N° de Matrícula:</span>
-                    <span class="font-mono font-bold text-black">{{ myMemberData.registration_number }}</span>
+                    <span class="font-mono font-bold text-black">{{ member.registration_number }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-500 text-sm">Estado de Cuenta:</span>
-                    <span :class="myMemberData.account_status_id === 1 ? 'text-green-600' : 'text-red-600'" class="font-bold uppercase">
-                        {{ myMemberData.account_status.name }}
+                    <span :class="member.account_status_id === 1 ? 'text-green-600' : 'text-red-600'" class="font-bold uppercase">
+                        {{ member.account_status.name }}
                     </span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-500 text-sm ">Localidad:</span>
-                    <span class="font-bold text-black">{{ myMemberData.location.name }}</span>
+                    <span class="font-bold text-black">{{ member.location.name }}</span>
                 </div>
             </div>
 
