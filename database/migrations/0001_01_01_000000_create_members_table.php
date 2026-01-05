@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('registration_number')->unique();
             $table->string('first_name');
             $table->string('last_name');
+            $table->string('image')->nullable();
             $table->string('dni')->unique();
             $table->string('address');
             $table->string('phone')->nullable();

@@ -17,12 +17,12 @@ defineProps<{
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: dashboard().url },
+  { title: 'Inicio', href: dashboard().url },
 ]
 </script>
 
 <template>
-  <Head title="Dashboard" />
+  <Head title="Inicio" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4">
