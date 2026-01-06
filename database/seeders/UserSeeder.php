@@ -28,7 +28,8 @@ class UserSeeder extends Seeder
             'dni' => '12345678',
             'address' => 'Calle Principal 123',
             'phone' => '555-1234',
-            'location_id' => 1, // Asumiendo que existe una ubicación con ID 1
+            'city'=> null,
+            'province_id' => 1, // Asumiendo que existe una ubicación con ID 1
             'account_status_id' => 1, // Asumiendo que existe un estado con ID 1
             'is_active' => true,
         ]);

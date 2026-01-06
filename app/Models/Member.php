@@ -15,14 +15,15 @@ class Member extends Model
         'dni',
         'address',
         'phone',
-        'location_id',
+        'city',
+        'province_id',
         'account_status_id',
         'is_active',
     ];
 
-    public function location(): BelongsTo
+    public function province(): BelongsTo
     {
-        return $this->belongsTo(Location::class, 'location_id');
+        return $this->belongsTo(Province::class, 'province_id');
     }
 
     public function accountStatus(): BelongsTo

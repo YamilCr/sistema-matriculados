@@ -49,7 +49,13 @@ class MemberController extends Controller
             'phone'               => 'nullable|string', 
             'location_id'         => 'required|exists:locations,id', 
             'account_status_id'   => 'required|exists:account_statuses,id',
+            'image'               => 'nullable|image|mimes:jpg,jpeg,png|max:2048', 
         ]);
+
+        if ($request->hasFile('image')) {
+            // Guarda en storage/app/public/members
+            $validated['image'] = $request->file('image')->store('members', 'public');
+        }
 
         Member::create($validated);
 
@@ -94,7 +100,16 @@ class MemberController extends Controller
             'location_id'         => 'required|exists:locations,id',
             'account_status_id'   => 'required|exists:account_statuses,id',
             'is_active'           => 'required|boolean',
+            'image'               => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            // Opcional: Eliminar imagen anterior del disco si existe
+            if ($member->image) {
+                \Storage::disk('public')->delete($member->image);
+            }
+            $validated['image'] = $request->file('image')->store('members', 'public');
+        }
 
         $member->update($validated);
 
