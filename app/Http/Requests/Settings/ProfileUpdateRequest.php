@@ -26,6 +26,10 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'image' => ['nullable','image','mimes:jpg,jpeg,png','max:2048'], 
+            'phone' => ['nullable', 'string', 'max:30'], 
+            'address' => ['required', 'string', 'max:255'],
+            'province_id' => ['required', 'exists:provinces,id'],
+            'city_id' => ['required', 'exists:cities,id'],
         ];
     }
 }

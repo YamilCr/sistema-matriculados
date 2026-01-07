@@ -15,11 +15,16 @@ class Member extends Model
         'dni',
         'address',
         'phone',
-        'city',
+        'city_id',
         'province_id',
         'account_status_id',
         'is_active',
     ];
+
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'city_id');
+    }
 
     public function province(): BelongsTo
     {

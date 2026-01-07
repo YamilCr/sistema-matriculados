@@ -20,9 +20,10 @@ return new class extends Migration
             $table->string('dni')->unique();
             $table->string('address');
             $table->string('phone')->nullable();
-            $table->integer('city')->nullable();
             
+                            
             // Llaves Foráneas (FK)
+            $table->foreignId('city_id')->constrained('cities');
             $table->foreignId('province_id')->constrained();
             $table->foreignId('account_status_id')->constrained();
 
