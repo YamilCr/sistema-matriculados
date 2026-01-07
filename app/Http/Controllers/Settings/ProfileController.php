@@ -55,7 +55,7 @@ class ProfileController extends Controller
                 ->update($memberData);
         }
 
-        return to_route('profile.edit');
+        return back()->with('status', 'profile-updated');
     }
 
     /**

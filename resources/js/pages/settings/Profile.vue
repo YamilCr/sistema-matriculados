@@ -58,13 +58,40 @@ const updatePhotoPreview = (e: Event) => {
     }
 };
 
+// const submit = () => {
+//     // IMPORTANTE: Cuando envías imágenes con PATCH en Laravel, 
+//     // debes usar POST y agregar '_method: patch'
+//     form.transform((data) => ({
+//         ...data,
+//         _method: 'patch',
+//     })).post(update().url, {
+//         preserveScroll: true,
+//         onSuccess: () => {
+//             photoPreview.value = null;
+//         },
+//         onError: (errors) => {
+//             console.error('Errores:', errors);
+//         }
+//     });
+// };
 const submit = () => {
-    // IMPORTANTE: Cuando envías imágenes con PATCH en Laravel, 
-    // debes usar POST y agregar '_method: patch'
-    form.transform((data) => ({
-        ...data,
-        _method: 'patch',
-    })).post(update().url, {
+    form.transform((data) => {
+        const payload: any = {
+            ...data,
+            _method: 'patch',
+        };
+
+        // Si NO es un miembro (es Admin puro), eliminamos los campos profesionales
+        // para que no lleguen como strings vacíos al backend
+        if (!props.member) {
+            delete payload.phone;
+            delete payload.address;
+            delete payload.province_id;
+            delete payload.city_id;
+        }
+
+        return payload;
+    }).post(update().url, {
         preserveScroll: true,
         onSuccess: () => {
             photoPreview.value = null;
