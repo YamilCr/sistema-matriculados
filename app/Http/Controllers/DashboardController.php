@@ -27,11 +27,21 @@ class DashboardController extends Controller
     if ($user->role_id === 2) {
         return Inertia::render('Dashboard', [
             'role' => 'member',
-            'myMemberData' => \App\Models\Member::with(['location', 'accountStatus'])
+            'myMemberData' => \App\Models\Member::with(['province', 'accountStatus'])
                 ->findOrFail($user->member_id),
         ]);
     }
 
     abort(403);
 }
+// Método para la vista de reportes (solo para admin)
+        public function report()
+        {
+            return Inertia::render('report/Index');
+        }
+// Método para la búsqueda de matriculados (solo para admin)
+        public function searchMember()
+        {
+            return Inertia::render('admin/Search');
+        }
 }

@@ -38,6 +38,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Crear o editar matriculados
     Route::get('/members/create', [MemberController::class, 'create'])->name('members.create');
     Route::post('/members', [MemberController::class, 'store'])->name('members.store');
+    
+    // Reportes
+    Route::get('/report', [DashboardController::class, 'report'])->name('report.index');
+   
+    // Buscar matriculados
+    Route::get('/admin/search', [DashboardController::class, 'searchMember'])->name('admin.search');    
+
 });
 
 require __DIR__.'/settings.php';

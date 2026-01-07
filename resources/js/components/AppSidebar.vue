@@ -18,6 +18,9 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import report from '@/routes/report';
+import admin from '@/routes/admin';
+
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -35,15 +38,15 @@ const mainNavItems = computed(() => {
     if (user.value && user.value.id === 1) {
         items.push(
             {
-                title: 'Buscar',
-                href: dashboard(), // Ajustado a tu ruta de matriculados
+                title: 'Buscar Matriculados',
+                href: admin.search(), 
                 icon: LayoutGrid,
             },
             {
                 title: 'Reportes',
-                href: dashboard(), 
+                href: report.index(), 
                 icon: LayoutGrid,
-            }
+            }   
         );
     }
 

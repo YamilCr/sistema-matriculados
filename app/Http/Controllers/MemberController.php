@@ -126,4 +126,21 @@ class MemberController extends Controller
 
         return redirect()->route('members.index')->with('message', 'Matriculado desactivado.');
     }
+
+    /**
+     * Busca matriculados por nombre, apellido o DNI.
+     */
+    public function search(Request $request)
+    {
+        $query = $request->input('query');  
+        $members = Member::where('first_name', 'like', "%{$query}%")
+            ->orWhere('last_name', 'like', "%{$query}%")
+            ->orWhere('dni', 'like', "%{$query}%")
+            ->with(['location', 'accountStatus'])
+            ->get();
+        return Inertia::render('members/Search', [
+            'members' => $members,
+            'searchQuery' => $query
+        ]);
+    }
 }
