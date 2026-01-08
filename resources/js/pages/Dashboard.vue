@@ -7,7 +7,7 @@ import AdminDashboard from '@/components/dashboard/AdminDashboard.vue'
 import MemberDashboard from '@/components/dashboard/MemberDashboard.vue'
 
 defineProps<{
-  role: 'admin' | 'member'
+  role: 'admin' | 'member' | 'staff'
   stats?: {
     total_members: number
     active_users: number
@@ -27,7 +27,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4">
       <AdminDashboard
-        v-if="role === 'admin' && stats"
+        v-if="(role === 'admin' || role === 'staff') && stats"
         :stats="stats"
       />
       <MemberDashboard

@@ -4,6 +4,7 @@ import { dashboard } from '@/routes'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
+import { route } from 'ziggy-js'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Matriculados', href: dashboard().url },
@@ -78,9 +79,7 @@ const filteredMembers = computed(() => {
   const query = searchQuery.value.toLowerCase()
   return props.members.filter(member => 
     member.enrollment_number.toLowerCase().includes(query) ||
-    member.name.toLowerCase().includes(query) ||
-    member.location.toLowerCase().includes(query) ||
-    member.phone.toLowerCase().includes(query)
+    member.name.toLowerCase().includes(query)
   )
 })
 
@@ -159,7 +158,7 @@ const deleteMember = (id: number, name: string) => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Buscar por número de matrícula, nombre o ubicación..."
+            placeholder="Buscar por número de matrícula o nombre..."
             class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>

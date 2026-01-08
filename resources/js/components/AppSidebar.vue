@@ -22,6 +22,7 @@ import report from '@/routes/report';
 import admin from '@/routes/admin';
 
 
+
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
@@ -34,8 +35,8 @@ const mainNavItems = computed(() => {
         },
     ];
 
-    // Si el role_id es 1 (Admin), agregamos los botones extra 
-    if (user.value && user.value.id === 1) {
+    // Si el role_id es 1 (Admin) o 3 (Staff), agregamos los botones extra 
+    if (user.value && (user.value.id === 1 || user.value.id === 3)) {
         items.push(
             {
                 title: 'Buscar Matriculados',
@@ -47,6 +48,16 @@ const mainNavItems = computed(() => {
                 href: report.index(), 
                 icon: LayoutGrid,
             }   
+        );
+    }
+
+    if (user.value && user.value.id === 1) {
+        items.push(
+            {
+                title: 'Gestion de Usuarios',
+                href: admin.search(), 
+                icon: LayoutGrid,
+            }
         );
     }
 

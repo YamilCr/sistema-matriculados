@@ -13,7 +13,7 @@ class DashboardController extends Controller
 {
     $user = auth()->user();
 
-    if ($user->role_id === 1) {
+    if ($user->role_id === 1 || $user->role_id === 3) {
         return Inertia::render('Dashboard', [
             'role' => 'admin',
             'stats' => [
@@ -31,6 +31,7 @@ class DashboardController extends Controller
                 ->findOrFail($user->member_id),
         ]);
     }
+    
 
     abort(403);
 }
@@ -60,7 +61,7 @@ class DashboardController extends Controller
                     'registration_date' => $member->created_at->format('Y-m-d'),
                 ];
             });
-            return Inertia::render('admin/Search', [
+            return Inertia::render('Admin/Search', [
             'members' => $members
         ]);
 
