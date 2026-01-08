@@ -42,6 +42,28 @@ class DashboardController extends Controller
 // Método para la búsqueda de matriculados (solo para admin)
         public function searchMember()
         {
-            return Inertia::render('admin/Search');
+            $user = auth()->user();
+
+            $members = Member::with(['city', 'accountStatus'])
+            ->latest()
+            ->get()
+            ->map(function ($member) {
+                return [
+                    'id' => $member->id,
+                    'enrollment_number' => $member->registration_number,
+                    'name' => $member->first_name . ' ' . $member->last_name,
+                    'email' => $user = User::where('member_id', $member->id)->value('email'),
+                    'phone' => $member->phone,
+                    'location' => $member->city->name ?? 'N/A',
+                    'province_id' => $member->province->name ?? 'N/A',
+                    'status' => $member->accountStatus->name ?? 'inactive',
+                    'registration_date' => $member->created_at->format('Y-m-d'),
+                ];
+            });
+            return Inertia::render('admin/Search', [
+            'members' => $members
+        ]);
+
         }
+
 }

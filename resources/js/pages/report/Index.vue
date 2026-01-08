@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-import { dashboard } from '@/routes'
-import { type BreadcrumbItem } from '@/types'
-import { Head, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+  import AppLayout from '@/layouts/AppLayout.vue'
+  import { dashboard } from '@/routes'
+  import { type BreadcrumbItem } from '@/types'
+  import { Head } from '@inertiajs/vue3'
+  import { ref } from 'vue'
+  
+  // Importar los componentes de modales
+  import StatusReportModal from '@/components/report/StatusReportModal.vue'
+import ExportReportModal from '@/components/report/ExportReportModal.vue'
+import CustomReportModal from '@/components/report/CustomReportModal.vue'
+// import MembersReportModal from '@/components/reports/MembersReportModal.vue'
+// import FinancialReportModal from '@/components/reports/FinancialReportModal.vue'
+// import LocationsReportModal from '@/components/reports/LocationsReportModal.vue'
+// import StatusReportModal from '@/components/reports/StatusReportModal.vue'
+// import CustomReportModal from '@/components/reports/CustomReportModal.vue'
+// import ExportReportModal from '@/components/reports/ExportReportModal.vue'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Reportes', href: dashboard().url },
@@ -15,7 +26,7 @@ interface Report {
   description: string
   icon: string
   color: string
-  route: string
+  modalComponent: string
 }
 
 const reports = ref<Report[]>([
@@ -25,7 +36,7 @@ const reports = ref<Report[]>([
     description: 'Lista completa de miembros con filtros por estado, ubicación y fecha',
     icon: '👥',
     color: 'bg-blue-500',
-    route: 'admin.report.members'
+    modalComponent: 'members'
   },
   {
     id: 'financial',
@@ -33,7 +44,7 @@ const reports = ref<Report[]>([
     description: 'Ingresos, pagos pendientes y estado de cuentas',
     icon: '💰',
     color: 'bg-green-500',
-    route: 'admin.report.financial'
+    modalComponent: 'financial'
   },
   {
     id: 'locations',
@@ -41,7 +52,7 @@ const reports = ref<Report[]>([
     description: 'Estadísticas de miembros agrupados por localidad',
     icon: '📍',
     color: 'bg-purple-500',
-    route: 'admin.report.locations'
+    modalComponent: 'locations'
   },
   {
     id: 'status',
@@ -49,7 +60,7 @@ const reports = ref<Report[]>([
     description: 'Análisis de miembros activos, inactivos y suspendidos',
     icon: '📊',
     color: 'bg-orange-500',
-    route: 'admin.report.status'
+    modalComponent: 'status'
   },
   {
     id: 'custom',
@@ -57,7 +68,7 @@ const reports = ref<Report[]>([
     description: 'Crea reportes personalizados con múltiples filtros',
     icon: '⚙️',
     color: 'bg-gray-500',
-    route: 'admin.report.custom'
+    modalComponent: 'custom'
   },
   {
     id: 'export',
@@ -65,12 +76,19 @@ const reports = ref<Report[]>([
     description: 'Descarga datos en formato Excel, PDF o CSV',
     icon: '📥',
     color: 'bg-indigo-500',
-    route: 'admin.report.export'
+    modalComponent: 'export'
   }
 ])
 
-const navigateToReport = (route: string) => {
-  router.visit(route)
+// Estados para controlar qué modal está abierto
+const activeModal = ref<string | null>(null)
+
+const openModal = (modalComponent: string) => {
+  activeModal.value = modalComponent
+}
+
+const closeModal = () => {
+  activeModal.value = null
 }
 </script>
 
@@ -94,7 +112,7 @@ const navigateToReport = (route: string) => {
         <div
           v-for="report in reports"
           :key="report.id"
-          @click="navigateToReport(report.route)"
+          @click="openModal(report.modalComponent)"
           class="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-200 dark:border-gray-700 overflow-hidden group"
         >
           <!-- Color Bar -->
@@ -135,21 +153,18 @@ const navigateToReport = (route: string) => {
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
-            @click="router.visit('admin.report.index')"
             class="flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
           >
             <span class="mr-2">📅</span>
             Último reporte generado
           </button>
           <button
-            @click="router.visit('admin.report.scheduled')"
             class="flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
           >
             <span class="mr-2">🔔</span>
             Reportes programados
           </button>
           <button
-            @click="router.visit('admin.report.history')"
             class="flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
           >
             <span class="mr-2">📂</span>
@@ -158,5 +173,36 @@ const navigateToReport = (route: string) => {
         </div>
       </div>
     </div>
+
+    <!-- Modales -->
+    <!-- <MembersReportModal 
+      :show="activeModal === 'members'" 
+      @close="closeModal" 
+    />
+    
+    <FinancialReportModal 
+      :show="activeModal === 'financial'" 
+      @close="closeModal" 
+    />
+    
+    <LocationsReportModal 
+      :show="activeModal === 'locations'" 
+      @close="closeModal" 
+    /> -->
+
+    <StatusReportModal 
+      :show="activeModal === 'status'" 
+      @close="closeModal" 
+    />
+    
+    <CustomReportModal 
+      :show="activeModal === 'custom'" 
+      @close="closeModal" 
+    />
+    
+    <ExportReportModal 
+      :show="activeModal === 'export'" 
+      @close="closeModal" 
+    />
   </AppLayout>
 </template>

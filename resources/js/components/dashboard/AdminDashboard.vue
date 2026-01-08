@@ -8,7 +8,7 @@ import users from '@/routes/users'
 // Aquí simularemos los espacios para iconos para mantener el código limpio.
 
 const { auth } = usePage().props as {
-  auth: { user: { name: string } }
+  auth: { user: { name: string, image: string } }
 }
 
 defineProps<{
@@ -41,7 +41,9 @@ const menuItems = [
       
       <div class="flex items-center gap-3 bg-white dark:bg-gray-900 p-2 pr-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
         <div class="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 font-bold">
-          {{ auth.user.name.charAt(0) }}
+          <!-- <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" /> -->
+          <img v-if="auth.user.image" :src="'/storage/' + auth.user.image" class="h-full w-full object-cover rounded-xl" />
+          <div v-else-if="auth.user.image!">{{ auth.user.name.charAt(0) }}</div>
         </div>
         <div>
           <p class="text-xs text-gray-500 font-medium">Super Usuario</p>
