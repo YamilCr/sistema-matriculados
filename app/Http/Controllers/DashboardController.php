@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
     if ($user->role_id === 1 || $user->role_id === 3) {
         return Inertia::render('Dashboard', [
-            'role' => 'admin',
+            'role' => $user->role_id === 1 ? 'admin' : 'staff',
             'stats' => [
                 'total_members' => 1,
                 'active_users' => 1,

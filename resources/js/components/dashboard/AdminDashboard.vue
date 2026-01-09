@@ -17,6 +17,7 @@ defineProps<{
     active_users: number
     morosos: number
   }
+  role: 'admin' | 'staff'
 }>()
 
 const menuItems = [
@@ -46,7 +47,8 @@ const menuItems = [
           <div v-else-if="auth.user.image!">{{ auth.user.name.charAt(0) }}</div>
         </div>
         <div>
-          <p class="text-xs text-gray-500 font-medium">Super Usuario</p>
+          <p v-if="role === 'admin'" class="text-xs text-gray-500 font-medium">Super Usuario</p>
+          <p v-else class="text-xs text-gray-500 font-medium">Personal de Administración </p>
           <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ auth.user.name }}</p>
         </div>
       </div>
