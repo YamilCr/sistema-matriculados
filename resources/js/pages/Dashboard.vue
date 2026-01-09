@@ -29,6 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       <AdminDashboard
         v-if="(role === 'admin' || role === 'staff') && stats"
         :stats="stats"
+        :role="role"
       />
       <MemberDashboard
         v-else
