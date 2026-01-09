@@ -5,6 +5,7 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import { route } from 'ziggy-js'
+import MemberModal from '@/pages/Member/Show.vue'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Matriculados', href: dashboard().url },
@@ -17,8 +18,12 @@ interface Member {
   email: string
   phone: string
   location: string
+  province: string // Nuevo
   status: 'active' | 'inactive' | 'suspended'
   registration_date: string
+  dni: string     // Nuevo
+  address: string // Nuevo
+  image?: string  // Nuevo (opcional)
 }
 
 // Props que recibirías desde el controlador
@@ -35,8 +40,11 @@ const props = withDefaults(defineProps<Props>(), {
       email: 'juan@example.com',
       phone: '+54 297 123-4567',
       location: 'Comodoro Rivadavia',
+      province: 'Chubut',
       status: 'active',
-      registration_date: '2024-01-15'
+      registration_date: '2024-01-15',
+      dni: '12345678',
+      address: 'Calle 1, 123'
     },
     {
       id: 2,
@@ -45,8 +53,11 @@ const props = withDefaults(defineProps<Props>(), {
       email: 'maria@example.com',
       phone: '+54 297 234-5678',
       location: 'Rada Tilly',
+      province: 'Chubut',
       status: 'active',
-      registration_date: '2024-02-20'
+      registration_date: '2024-02-20',
+      dni: '23456789',
+      address: 'Calle 2, 456'
     },
     {
       id: 3,
@@ -55,8 +66,11 @@ const props = withDefaults(defineProps<Props>(), {
       email: 'carlos@example.com',
       phone: '+54 297 345-6789',
       location: 'Comodoro Rivadavia',
+      province: 'Chubut',
       status: 'inactive',
-      registration_date: '2024-03-10'
+      registration_date: '2024-03-10',
+      dni: '34567890',
+      address: 'Calle 3, 789'
     },
     {
       id: 4,
@@ -65,12 +79,17 @@ const props = withDefaults(defineProps<Props>(), {
       email: 'ana@example.com',
       phone: '+54 297 456-7890',
       location: 'Caleta Olivia',
+      province: 'Chubut',
       status: 'suspended',
-      registration_date: '2024-04-05'
+      registration_date: '2024-04-05',
+      dni: '45678901',
+      address: 'Calle 4, 012'
     }
   ]
 })
 
+const showModal = ref(false)
+const selectedMember = ref<Member | null>(null)
 const searchQuery = ref('')
 
 const filteredMembers = computed(() => {
@@ -101,8 +120,16 @@ const getStatusText = (status: string) => {
   return texts[status as keyof typeof texts] || status
 }
 
-const viewMember = (id: number) => {
-  router.visit(route('members.show', { member: id }))
+const viewMember = (member: Member) => {
+  // En lugar de navegar, guardamos el miembro y abrimos el modal
+  selectedMember.value = member
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  // Opcional: limpiar seleccionado después de una animación
+  setTimeout(() => selectedMember.value = null, 300) 
 }
 
 const editMember = (id: number) => {
@@ -232,7 +259,7 @@ const deleteMember = (id: number, name: string) => {
                   <div class="flex items-center justify-end gap-2">
                     <!-- Ver -->
                     <button
-                      @click="viewMember(member.id)"
+                      @click="viewMember(member)"
                       class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                       title="Ver detalles"
                     >
@@ -284,5 +311,10 @@ const deleteMember = (id: number, name: string) => {
         </div>
       </div>
     </div>
+    <MemberModal 
+        :show="showModal" 
+        :member="selectedMember" 
+        @close="closeModal" 
+    />
   </AppLayout>
 </template>

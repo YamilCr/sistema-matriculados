@@ -52,13 +52,19 @@ class DashboardController extends Controller
                 return [
                     'id' => $member->id,
                     'enrollment_number' => $member->registration_number,
-                    'name' => $member->first_name . ' ' . $member->last_name,
-                    'email' => $user = User::where('member_id', $member->id)->value('email'),
+                    'name' => $member->first_name . ' ' . $member->last_name, // Concatenado
+                    'email' => $member->user ? $member->user->email : 'Sin usuario', // Asumiendo relación
                     'phone' => $member->phone,
                     'location' => $member->city->name ?? 'N/A',
-                    'province_id' => $member->province->name ?? 'N/A',
                     'status' => $member->accountStatus->name ?? 'inactive',
                     'registration_date' => $member->created_at->format('Y-m-d'),
+                    
+                    // --- NUEVOS CAMPOS SEGÚN TU MIGRACIÓN ---
+                    'dni' => $member->dni,
+                    'address' => $member->address,
+                    'image' => $member->image,
+                    'province' => $member->province->name ?? 'N/A',
+                    'status_id' => $member->account_status_id, // Útil para colores
                 ];
             });
             return Inertia::render('Admin/Search', [
