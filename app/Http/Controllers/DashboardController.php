@@ -6,6 +6,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Member;
 use App\Models\User;
+use App\Models\Province;
+use App\Models\City;
 
 class DashboardController extends Controller
 {
@@ -65,10 +67,13 @@ class DashboardController extends Controller
                     'image' => $member->image,
                     'province' => $member->province->name ?? 'N/A',
                     'status_id' => $member->account_status_id, // Útil para colores
+                    
                 ];
             });
-            return Inertia::render('Admin/Search', [
-            'members' => $members
+            return Inertia::render('Admin/Search', [   
+            'members' => $members, 
+            'provinces' => Province::select('id', 'name')->get(),
+            'cities' => City::select('id', 'name', 'province_id')->get(),
         ]);
 
         }

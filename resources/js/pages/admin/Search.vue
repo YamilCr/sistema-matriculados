@@ -6,10 +6,14 @@ import { Head, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import { route } from 'ziggy-js'
 import MemberModal from '@/pages/Member/Show.vue'
+import MemberEditModal from '@/pages/Member/Edit.vue'
+import MemberCreateModal from '@/Pages/Member/Create.vue' 
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Matriculados', href: dashboard().url },
 ]
+
+
 
 interface Member {
   id: number
@@ -19,8 +23,8 @@ interface Member {
   phone: string
   location: string
   province: string // Nuevo
-  status: 'active' | 'inactive' | 'suspended'
   registration_date: string
+  status: string
   dni: string     // Nuevo
   address: string // Nuevo
   image?: string  // Nuevo (opcional)
@@ -29,11 +33,13 @@ interface Member {
 // Props que recibirías desde el controlador
 interface Props {
   members: Member[]
+  cities: Array<{ id: number; name: string; province_id: number }>
+  provinces: Array<{ id: number; name: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   members: () => [
-    {
+    /*{
       id: 1,
       enrollment_number: 'MAT-2024-001',
       name: 'Juan Pérez',
@@ -85,12 +91,15 @@ const props = withDefaults(defineProps<Props>(), {
       dni: '45678901',
       address: 'Calle 4, 012'
     }
-  ]
+  */]
 })
 
 const showModal = ref(false)
 const selectedMember = ref<Member | null>(null)
 const searchQuery = ref('')
+const showCreateModal = ref(false)
+
+
 
 const filteredMembers = computed(() => {
   if (!searchQuery.value) return props.members
@@ -120,6 +129,15 @@ const getStatusText = (status: string) => {
   return texts[status as keyof typeof texts] || status
 }
 
+
+const openCreateModal = () => {
+  showCreateModal.value = true
+}
+
+const closeCreateModal = () => {
+  showCreateModal.value = false
+}
+
 const viewMember = (member: Member) => {
   // En lugar de navegar, guardamos el miembro y abrimos el modal
   selectedMember.value = member
@@ -132,8 +150,22 @@ const closeModal = () => {
   setTimeout(() => selectedMember.value = null, 300) 
 }
 
-const editMember = (id: number) => {
-  router.visit(route('members.edit', { member: id }))
+// --- LÓGICA MODAL "EDITAR" (NUEVA) ---
+const showEditModal = ref(false)
+const memberToEdit = ref<Member | null>(null)
+
+// MODIFICAMOS LA FUNCIÓN EXISTENTE
+const editMember = (member: Member) => {
+  // Antes: router.visit(route('members.edit', { member: id }))
+  // Ahora: Abrimos el modal y le pasamos el objeto completo
+  memberToEdit.value = member
+  showEditModal.value = true
+}
+
+const closeEditModal = () => {
+  showEditModal.value = false
+  // No limpiamos memberToEdit inmediatamente para evitar parpadeos si el modal se cierra lento
+  setTimeout(() => memberToEdit.value = null, 300) 
 }
 
 const deleteMember = (id: number, name: string) => {
@@ -146,6 +178,8 @@ const deleteMember = (id: number, name: string) => {
     })
   }
 }
+
+
 </script>
 
 <template>
@@ -164,7 +198,7 @@ const deleteMember = (id: number, name: string) => {
           </p>
         </div>
         <button
-          @click="router.visit(route('members.create'))"
+          @click="openCreateModal"
           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,7 +305,7 @@ const deleteMember = (id: number, name: string) => {
                     
                     <!-- Editar -->
                     <button
-                      @click="editMember(member.id)"
+                      @click="editMember(member)"
                       class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors"
                       title="Editar"
                     >
@@ -315,6 +349,18 @@ const deleteMember = (id: number, name: string) => {
         :show="showModal" 
         :member="selectedMember" 
         @close="closeModal" 
+    />
+    <MemberEditModal 
+      :show="showEditModal" 
+      :member="memberToEdit" 
+      :provinces="props.provinces"  :cities="props.cities"        
+      @close="closeEditModal" 
+    />
+    <MemberCreateModal
+        :show="showCreateModal"
+        :provinces="props.provinces"
+        :cities="props.cities"
+        @close="closeCreateModal"
     />
   </AppLayout>
 </template>

@@ -33,6 +33,8 @@ Route::middleware(['auth', 'staff'])->group(function () {
     // Gestión básica que el Staff puede hacer
     Route::get('/members/create', [MemberController::class, 'create'])->name('members.create');
     Route::post('/members', [MemberController::class, 'store'])->name('members.store');
+    Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
+
     
     // Búsqueda (Unificamos la ruta, sirve para ambos)
     Route::get('/admin/search', [DashboardController::class, 'searchMember'])->name('admin.search');

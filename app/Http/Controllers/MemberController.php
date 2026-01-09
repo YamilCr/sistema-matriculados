@@ -7,6 +7,11 @@ use App\Models\Location;
 use App\Models\AccountStatus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule; 
+use Illuminate\Support\Facades\Storage;
+use App\Models\User; // <--- Agregar
+use Illuminate\Support\Facades\Hash; // <--- Agregar para la contraseña
+use Illuminate\Support\Facades\DB;   // <--- Agregar para la transacción
 
 class MemberController extends Controller
 {
@@ -40,27 +45,56 @@ class MemberController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. Validamos datos del Matriculado Y del Usuario (Email)
         $validated = $request->validate([
             'registration_number' => 'required|string|unique:members,registration_number',
-            'first_name'          => 'required|string', 
-            'last_name'           => 'required|string', 
-            'dni'                 => 'required|string|unique:members,dni', 
-            'address'             => 'required|string', 
-            'phone'               => 'nullable|string', 
-            'location_id'         => 'required|exists:locations,id', 
+            'first_name'          => 'required|string|max:255',
+            'last_name'           => 'required|string|max:255',
+            'dni'                 => 'required|string|unique:members,dni',
+            'address'             => 'required|string|max:255',
+            'phone'               => 'nullable|string|max:50',
+            'city_id'             => 'required|exists:cities,id',
+            'province_id'         => 'required|exists:provinces,id',
             'account_status_id'   => 'required|exists:account_statuses,id',
-            'image'               => 'nullable|image|mimes:jpg,jpeg,png|max:2048', 
+            'image'               => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'is_active'           => 'boolean',
+            
+            // Validamos el email para la tabla USERS
+            'email'               => 'required|email|unique:users,email', 
         ]);
 
-        if ($request->hasFile('image')) {
-            // Guarda en storage/app/public/members
-            $validated['image'] = $request->file('image')->store('members', 'public');
-        }
+        // Usamos una transacción: Si falla crear el usuario, se borra el matriculado automáticamente
+        DB::transaction(function () use ($request, $validated) {
+            
+            // A. Manejo de Imagen
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('members', 'public');
+            }
 
-        Member::create($validated);
+            // B. Crear Matriculado (Member)
+            // Quitamos el email del array porque 'email' no va en la tabla members (según tu migración)
+            $memberData = collect($validated)->except(['email', 'image'])->toArray();
+            $memberData['image'] = $imagePath; // Añadimos la ruta de la imagen
 
-        return redirect()->route('members.index')->with('message', 'Matriculado creado.');
+            $member = Member::create($memberData);
+
+            // C. Crear Usuario (User) vinculado
+            User::create([
+                'name'      => $member->first_name . ' ' . $member->last_name, // Nombre completo
+                'email'     => $request->email,
+                'password'  => Hash::make($member->dni), // Contraseña por defecto = DNI
+                'image'     => $imagePath, // Usamos la misma foto si quieres
+                'role_id'   => 2, // <--- 2 = Matriculado (Ajusta según tu tabla roles)
+                'member_id' => $member->id,
+                'is_active' => true,
+            ]);
+        });
+
+        return redirect()->back()->with('message', 'Matriculado y Usuario creados exitosamente.');
     }
+        //
+        
 
     /**
      * Muestra la ficha de un matriculado específico.
@@ -85,46 +119,63 @@ class MemberController extends Controller
         ]);
     }
 
-    /**
-     * Actualiza los datos en la base de datos.
-     */
+
     public function update(Request $request, Member $member)
     {
+        // 1. Validamos usando los nombres EXACTOS de la base de datos
         $validated = $request->validate([
-            'registration_number' => 'required|string|unique:members,registration_number,' . $member->id,
-            'first_name'          => 'required|string',
-            'last_name'           => 'required|string',
-            'dni'                 => 'required|string|unique:members,dni,' . $member->id,
-            'address'             => 'required|string',
-            'phone'               => 'nullable|string',
-            'location_id'         => 'required|exists:locations,id',
-            'account_status_id'   => 'required|exists:account_statuses,id',
-            'is_active'           => 'required|boolean',
-            'image'               => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            // Validaciones únicas ignorando el ID actual
+            'registration_number' => ['required', 'string', Rule::unique('members')->ignore($member->id)],
+            'dni'                 => ['required', 'string', Rule::unique('members')->ignore($member->id)],
+            
+            // Campos de texto simples
+            'first_name'          => ['required', 'string', 'max:255'],
+            'last_name'           => ['required', 'string', 'max:255'],
+            'address'             => ['required', 'string', 'max:255'],
+            'phone'               => ['nullable', 'string', 'max:20'],
+            
+            // ⚠️ CORRECCIÓN: Usamos city_id y province_id para coincidir con tu migración
+            'city_id'             => ['required', 'exists:cities,id'], 
+            'province_id'         => ['required', 'exists:provinces,id'],
+            
+            'account_status_id'   => ['required', 'exists:account_statuses,id'],
+            
+            // Booleano (asegúrate de enviarlo como 0/1 o true/false desde el front)
+            'is_active'           => ['boolean'], // 'sometimes' o 'required' según tu lógica
+            
+            // Imagen
+            'image'               => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
+        // 2. Lógica de la Imagen (sin cambios, estaba bien)
         if ($request->hasFile('image')) {
-            // Opcional: Eliminar imagen anterior del disco si existe
             if ($member->image) {
                 \Storage::disk('public')->delete($member->image);
             }
-            $validated['image'] = $request->file('image')->store('members', 'public');
+            $member->image = $request->file('image')->store('profiles', 'public');
         }
+        $member->save();
 
+        // 3. Actualizar
+        // Esto funcionará porque ahora las claves de $validated (city_id, etc.) 
+        // coinciden con las columnas de tu tabla 'members'.
         $member->update($validated);
 
-        return redirect()->route('members.index')->with('message', 'Datos actualizados.');
+        return redirect()->back()->with('message', 'Datos actualizados correctamente.');
     }
 
-    /**
-     * Elimina (o desactiva) un registro.
-     */
+ 
     public function destroy(Member $member)
     {
-        // En sistemas de gestión es mejor desactivar que borrar físicamente
+        // OPCIÓN 1: Desactivar (Recomendado según tu migración is_active)
         $member->update(['is_active' => false]); 
+        $mensaje = 'Matriculado desactivado exitosamente.';
 
-        return redirect()->route('members.index')->with('message', 'Matriculado desactivado.');
+        // OPCIÓN 2: Borrar físicamente (Si prefieres que desaparezca de la BD, descomenta la siguiente línea y comenta la anterior)
+        // $member->delete(); 
+        // $mensaje = 'Matriculado eliminado permanentemente.';
+
+        return redirect()->back()->with('message', $mensaje);
     }
 
     /**
