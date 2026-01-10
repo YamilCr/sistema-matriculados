@@ -6,15 +6,12 @@
   import { ref } from 'vue'
   
   // Importar los componentes de modales
-  import StatusReportModal from '@/components/report/StatusReportModal.vue'
+import StatusReportModal from '@/components/report/StatusReportModal.vue'
 import ExportReportModal from '@/components/report/ExportReportModal.vue'
 import CustomReportModal from '@/components/report/CustomReportModal.vue'
-// import MembersReportModal from '@/components/reports/MembersReportModal.vue'
-// import FinancialReportModal from '@/components/reports/FinancialReportModal.vue'
-// import LocationsReportModal from '@/components/reports/LocationsReportModal.vue'
-// import StatusReportModal from '@/components/reports/StatusReportModal.vue'
-// import CustomReportModal from '@/components/reports/CustomReportModal.vue'
-// import ExportReportModal from '@/components/reports/ExportReportModal.vue'
+import MembersReportModal from '@/components/report/MembersReportModal.vue'
+import FinancialReportModal from '@/components/report/FinancialReportModal.vue'
+import LocationsReportModal from '@/components/report/LocationsReportModal.vue'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Reportes', href: dashboard().url },
@@ -175,7 +172,7 @@ const closeModal = () => {
     </div>
 
     <!-- Modales -->
-    <!-- <MembersReportModal 
+    <MembersReportModal 
       :show="activeModal === 'members'" 
       @close="closeModal" 
     />
@@ -188,7 +185,7 @@ const closeModal = () => {
     <LocationsReportModal 
       :show="activeModal === 'locations'" 
       @close="closeModal" 
-    /> -->
+    />
 
     <StatusReportModal 
       :show="activeModal === 'status'" 

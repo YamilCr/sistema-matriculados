@@ -4,6 +4,7 @@ import accountstatuses from '@/routes/accountstatuses'
 import locations from '@/routes/locations'
 import members from '@/routes/members'
 import users from '@/routes/users'
+import admin from '@/routes/admin'
 // Nota: Para los iconos puedes usar librerías como Lucide-Vue-Next o Heroicons
 // Aquí simularemos los espacios para iconos para mantener el código limpio.
 
@@ -21,7 +22,7 @@ defineProps<{
 }>()
 
 const menuItems = [
-  { name: 'Matriculados', href: members.index(), icon: '👥', color: 'bg-blue-500' },
+  { name: 'Matriculados', href: admin.search(), icon: '👥', color: 'bg-blue-500' },
   { name: 'Usuarios', href: users.index(), icon: '🔐', color: 'bg-purple-500' },
   { name: 'Localidades', href: locations.index(), icon: '📍', color: 'bg-emerald-500' },
   { name: 'Estados de Cuenta', href: accountstatuses.index(), icon: '💳', color: 'bg-amber-500' },

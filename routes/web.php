@@ -47,7 +47,9 @@ Route::middleware(['auth', 'staff'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     // Gestión de usuarios del sistema (Crear otros admins o staff)
     Route::resource('users', UserController::class);
-    
+    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+    ->name('users.toggle.status');
+
     // Tablas maestras (Para que el staff no rompa la configuración)
     Route::resource('locations', LocationController::class);
     Route::resource('accountstatuses', AccountStatusController::class);

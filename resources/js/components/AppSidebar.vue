@@ -20,6 +20,7 @@ import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import report from '@/routes/report';
 import admin from '@/routes/admin';
+import users from '@/routes/users';
 
 
 
@@ -39,7 +40,7 @@ const mainNavItems = computed(() => {
     if (user.value && (user.value.id === 1 || user.value.id === 3)) {
         items.push(
             {
-                title: 'Buscar Matriculados',
+                title: 'Matriculados',
                 href: admin.search(), 
                 icon: LayoutGrid,
             },
@@ -55,7 +56,7 @@ const mainNavItems = computed(() => {
         items.push(
             {
                 title: 'Gestion de Usuarios',
-                href: admin.search(), 
+                href: users.index(), 
                 icon: LayoutGrid,
             }
         );
