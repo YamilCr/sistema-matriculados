@@ -18,7 +18,6 @@ class Member extends Model
         'city_id',
         'province_id',
         'account_status_id',
-        'is_active',
     ];
 
     public function city()

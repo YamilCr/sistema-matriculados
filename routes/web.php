@@ -5,7 +5,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\LocationController;
+use App\Http\Controllers\LocationController; //supuestamente por que location controller no existe y me tira error ahi.
 use App\Http\Controllers\AccountStatusController;
 use App\Http\Controllers\DashboardController;
 

@@ -177,7 +177,6 @@ class MemberController extends Controller
 
         return redirect()->back()->with('message', $mensaje);
     }
-
     /**
      * Busca matriculados por nombre, apellido o DNI.
      */

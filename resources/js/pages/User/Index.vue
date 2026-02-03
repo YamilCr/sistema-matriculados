@@ -141,17 +141,6 @@ const toggleUserStatus = (userId: number, currentStatus: boolean) => {
   }
 }
 
-const deleteUser = (userId: number, userName: string) => {
-  if (confirm(`¿Estás seguro de eliminar al usuario ${userName}?`)) {
-    router.delete(route('users.destroy', { user: userId }), {
-      preserveScroll: true,
-      onSuccess: () => {
-        alert('Usuario eliminado exitosamente')
-      }
-    })
-  }
-}
-
 const clearFilters = () => {
   searchQuery.value = ''
   selectedRole.value = null
@@ -398,17 +387,6 @@ const clearFilters = () => {
                       </svg>
                       <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                    </button>
-                    
-                    <!-- Eliminar -->
-                    <button
-                      @click="deleteUser(user.id, user.name)"
-                      class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                      title="Eliminar"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                       </svg>
                     </button>
                   </div>

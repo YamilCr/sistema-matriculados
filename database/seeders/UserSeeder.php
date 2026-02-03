@@ -31,7 +31,6 @@ class UserSeeder extends Seeder
             'city_id'=> 1,
             'province_id' => 1, // Asumiendo que existe una ubicación con ID 1
             'account_status_id' => 1, // Asumiendo que existe un estado con ID 1
-            'is_active' => true,
         ]);
 
         User::create([
