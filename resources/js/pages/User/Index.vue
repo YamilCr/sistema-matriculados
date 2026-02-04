@@ -8,6 +8,7 @@ import users from '@/routes/users'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
+import Swal from 'sweetalert2'
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -129,16 +130,53 @@ const closeEditModal = () => {
   setTimeout(() => selectedUser.value = null, 300)
 }
 
+
+
 const toggleUserStatus = (userId: number, currentStatus: boolean) => {
   const action = currentStatus ? 'desactivar' : 'activar'
-  if (confirm(`¿Estás seguro de ${action} este usuario?`)) {
-    router.patch((users.toggle.status(userId)), {
-      preserveScroll: true,
-      onSuccess: () => {
-        alert(`Usuario ${action === 'activar' ? 'activado' : 'desactivado'} exitosamente`)
-      }
-    })
-  }
+  const btnColor = currentStatus ? '#ef4444' : '#22c55e' // Rojo para desactivar, Verde para activar
+
+  Swal.fire({
+    title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} usuario?`,
+    text: `Vas a ${action} el acceso de este usuario al sistema.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: btnColor,
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: `Sí, ${action}`,
+    cancelButtonText: 'Cancelar',
+    // Estilos para modo oscuro/claro automáticos
+    background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      
+      // Aquí llamamos a la ruta usando router de Inertia
+      // Asegúrate de que tu ruta en Laravel se llame 'users.toggle.status'
+        router.patch((users.toggle.status(userId)), {
+        preserveScroll: true,
+        onSuccess: () => {
+          // Opcional: Mostrar alerta de éxito
+          Swal.fire({
+            title: '¡Listo!',
+            text: `Usuario ${currentStatus ? 'desactivado' : 'activado'} correctamente.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#fff',
+            color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+          })
+        },
+        onError: () => {
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo cambiar el estado.',
+            icon: 'error'
+          })
+        }
+      })
+    }
+  })
 }
 
 const clearFilters = () => {

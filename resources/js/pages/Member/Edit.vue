@@ -11,7 +11,7 @@ const props = defineProps<{
     // Estas listas deben venir desde tu controlador (MemberController@edit)
     provinces: Array<{ id: number; name: string }>;
     cities: Array<{ id: number; name: string; province_id: number }>;
-    // accountStatuses? ...
+    accountStatuses: Array<{ id: number; name: string }>;
 }>();
 
 const emit = defineEmits(['close']);
@@ -32,7 +32,6 @@ const form = useForm({
     image: null as File | null,
     // Campos ocultos
     registration_number: '',
-    is_active: true
 });
 
 // Lógica para filtrar ciudades según la provincia seleccionada
@@ -60,13 +59,11 @@ watch(() => props.member, (newValue) => {
         form.address = newValue.address;
         
         // Asignamos los IDs para que los select se preseleccionen
-        form.city_id = newValue.city_id;
-        form.province_id = newValue.province_id;
-        form.account_status_id = newValue.account_status_id;
-        
-        form.registration_number = newValue.enrollment_number || newValue.registration_number;
-        form.is_active = newValue.is_active !== undefined ? newValue.is_active : true;
+        form.province_id = newValue.province_id ? Number(newValue.province_id) : null;
+        form.city_id = newValue.city_id ? Number(newValue.city_id) : null;
+        form.account_status_id = newValue.account_status_id ? Number(newValue.account_status_id) : null;
 
+        form.registration_number = newValue.enrollment_number || newValue.registration_number;
         form.image = null; 
         form.clearErrors();
     }
@@ -107,13 +104,6 @@ const submit = () => {
         },
     });
 };
-
-// Esto idealmente también debería venir como prop desde el controlador
-const statuses = [
-    { id: 1, name: 'Activo' },
-    { id: 2, name: 'Inactivo' },
-    { id: 3, name: 'Suspendido' },
-];
 </script>
 
 <template>
@@ -209,15 +199,14 @@ const statuses = [
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Estado de Cuenta</label>
-                            <select v-model="form.account_status_id" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            <select v-model="form.account_status_id" class="w-full px-4 py-2 border ...">
                                 <option :value="null" disabled>Seleccione un estado</option>
-                                <option v-for="status in statuses" :key="status.id" :value="status.id">
+                                <option v-for="status in props.accountStatuses" :key="status.id" :value="status.id">
                                     {{ status.name }}
                                 </option>
                             </select>
-                             <p v-if="form.errors.account_status_id" class="text-red-500 text-xs mt-1">{{ form.errors.account_status_id }}</p>
+                            <p v-if="form.errors.account_status_id" class="text-red-500 text-xs mt-1">{{ form.errors.account_status_id }}</p>
                         </div>
-
                     </div>
 
                     <div class="mt-8 flex justify-end gap-3">

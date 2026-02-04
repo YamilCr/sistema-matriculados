@@ -119,9 +119,9 @@ const statusColorClasses = computed(() => {
                                 </div>
 
                                 <div class="group">
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Localidad</label>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ciudad</label>
                                     <div class="text-gray-900 dark:text-gray-200 font-medium">
-                                        {{ member.location }}
+                                        {{ member.city }}
                                     </div>
                                 </div>
 

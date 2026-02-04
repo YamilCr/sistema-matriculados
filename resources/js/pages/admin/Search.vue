@@ -23,7 +23,7 @@ interface Member {
   name: string
   email: string
   phone: string
-  location: string
+  city: string
   province: string // Nuevo
   registration_date: string
   status: string
@@ -37,6 +37,7 @@ interface Props {
   members: Member[]
   cities: Array<{ id: number; name: string; province_id: number }>
   provinces: Array<{ id: number; name: string }>
+  accountStatuses: Array<{ id: number; name: string }> // <--- Recibir esto
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -292,7 +293,7 @@ const closeEditModal = () => {
                   {{ member.phone }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  {{ member.location }}
+                  {{ member.city }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span :class="[getStatusColor(member.status), 'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full']">
@@ -355,7 +356,8 @@ const closeEditModal = () => {
     <MemberEditModal 
       :show="showEditModal" 
       :member="memberToEdit" 
-      :provinces="props.provinces"  :cities="props.cities"        
+      :provinces="props.provinces"  :cities="props.cities" 
+      :account-statuses="props.accountStatuses"       
       @close="closeEditModal" 
     />
     <MemberCreateModal

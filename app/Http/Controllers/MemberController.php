@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use App\Models\Location;
+use App\Models\City;           // <--- Asegúrate de tener este import
+use App\Models\Province;
 use App\Models\AccountStatus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,13 +20,19 @@ class MemberController extends Controller
     /**
      * Muestra la lista de matriculados.
      */
-    public function index()
+   public function index()
     {
-        // Cargamos las relaciones 'location' y 'accountStatus' definidas en los modelos 
-        $members = Member::with(['location', 'accountStatus'])->get();
+        // Cargamos relaciones correctas: city, province, accountStatus
+        $members = Member::with(['city', 'province', 'accountStatus'])
+            ->latest()
+            ->get();
 
+        // IMPORTANTE: Enviar las listas auxiliares aquí también
         return Inertia::render('Members/Index', [
-            'members' => $members
+            'members' => $members,
+            'cities' => City::all(),
+            'provinces' => Province::all(),
+            'accountStatuses' => AccountStatus::all(),
         ]);
     }
 
@@ -139,10 +147,7 @@ class MemberController extends Controller
             'province_id'         => ['required', 'exists:provinces,id'],
             
             'account_status_id'   => ['required', 'exists:account_statuses,id'],
-            
-            // Booleano (asegúrate de enviarlo como 0/1 o true/false desde el front)
-            'is_active'           => ['boolean'], // 'sometimes' o 'required' según tu lógica
-            
+                        
             // Imagen
             'image'               => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
@@ -186,11 +191,14 @@ class MemberController extends Controller
         $members = Member::where('first_name', 'like', "%{$query}%")
             ->orWhere('last_name', 'like', "%{$query}%")
             ->orWhere('dni', 'like', "%{$query}%")
-            ->with(['location', 'accountStatus'])
+            ->with(['city', 'province', 'accountStatus']) 
             ->get();
         return Inertia::render('members/Search', [
             'members' => $members,
-            'searchQuery' => $query
+            'searchQuery' => $query,
+            'provinces' => Province::all(),
+            'cities' => City::all(), 
+            'accountStatuses' => AccountStatus::all()
         ]);
     }
 }
