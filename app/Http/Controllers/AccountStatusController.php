@@ -4,62 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountStatus;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AccountStatusController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Inertia::render('AccountStatuses/Index', [
+            'statuses' => AccountStatus::all()
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|unique:account_statuses',
+            'description' => 'nullable|string',
+        ]);
+
+        AccountStatus::create($validated);
+        return redirect()->back()->with('message', 'Estado creado.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(AccountStatus $accountStatus)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(AccountStatus $accountStatus)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, AccountStatus $accountStatus)
     {
-        //
-    }
+        $validated = $request->validate([
+            'name' => 'required|string|unique:account_statuses,name,' . $accountStatus->id,
+            'description' => 'nullable|string',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(AccountStatus $accountStatus)
-    {
-        //
+        $accountStatus->update($validated);
+        return redirect()->back()->with('message', 'Estado actualizado.');
     }
 }
