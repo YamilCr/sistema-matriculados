@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3'
-import accountstatuses from '@/routes/accountstatuses'
-import locations from '@/routes/locations'
-import members from '@/routes/members'
-import users from '@/routes/users'
 import admin from '@/routes/admin'
+import users from '@/routes/users'
 // Nota: Para los iconos puedes usar librerías como Lucide-Vue-Next o Heroicons
 // Aquí simularemos los espacios para iconos para mantener el código limpio.
 
@@ -24,8 +21,6 @@ defineProps<{
 const menuItems = [
   { name: 'Matriculados', href: admin.search(), icon: '👥', color: 'bg-blue-500' },
   { name: 'Usuarios', href: users.index(), icon: '🔐', color: 'bg-purple-500' },
-  { name: 'Localidades', href: locations.index(), icon: '📍', color: 'bg-emerald-500' },
-  { name: 'Estados de Cuenta', href: accountstatuses.index(), icon: '💳', color: 'bg-amber-500' },
 ]
 </script>
 
@@ -82,7 +77,7 @@ const menuItems = [
           Gestión del Sistema
         </h2>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link 
             v-for="item in menuItems" 
             :key="item.name"
