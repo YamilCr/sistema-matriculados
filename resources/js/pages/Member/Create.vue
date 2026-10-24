@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue'; 
-import { route } from 'ziggy-js';
+import membersRoutes from '@/routes/members';
 
 // Props: Recibimos las listas para los selectores
 const props = defineProps<{
     show: boolean;
     provinces: Array<{ id: number; name: string }>;
     cities: Array<{ id: number; name: string; province_id: number }>;
-    // accountStatuses? Si los pasas desde el controlador, agrégalos aquí
+    accountStatuses: Array<{ id: number; name: string }>;
 }>();
 
 const emit = defineEmits(['close']);
@@ -27,10 +27,19 @@ const form = useForm({
     address: '',
     city_id: null as number | null,
     province_id: null as number | null,
-    account_status_id: 1, // Por defecto "Activo" (ID 1)
+    account_status_id: (props.accountStatuses?.[0]?.id ?? null) as number | null, // por defecto, el primer estado
     image: null as File | null,
-    is_active: true
 });
+
+// Al corregir un campo, se borra su error de validación
+watch(
+    () => ({ ...form.data() }),
+    (now, before) => {
+        for (const key of Object.keys(now) as (keyof typeof now)[]) {
+            if (now[key] !== before?.[key]) form.clearErrors(key as any);
+        }
+    },
+);
 
 // Lógica de filtrado de ciudades
 const filteredCities = computed(() => {
@@ -60,7 +69,7 @@ const close = () => {
 
 const submit = () => {
     // Para crear usamos POST directo a 'members.store'
-    form.post(route('members.store'), {
+    form.post(membersRoutes.store().url, {
         forceFormData: true, 
         preserveScroll: true,
         onSuccess: () => {
@@ -72,12 +81,6 @@ const submit = () => {
     });
 };
 
-// Estados hardcodeados (o pásalos por props si prefieres)
-const statuses = [
-    { id: 1, name: 'Activo' },
-    { id: 2, name: 'Inactivo' },
-    { id: 3, name: 'Suspendido' },
-];
 </script>
 
 <template>
@@ -199,7 +202,7 @@ const statuses = [
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Estado</label>
                             <select v-model="form.account_status_id" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                                <option v-for="status in statuses" :key="status.id" :value="status.id">{{ status.name }}</option>
+                                <option v-for="status in accountStatuses" :key="status.id" :value="status.id">{{ status.name }}</option>
                             </select>
                             <p v-if="form.errors.account_status_id" class="text-red-500 text-xs mt-1">{{ form.errors.account_status_id }}</p>
                         </div>

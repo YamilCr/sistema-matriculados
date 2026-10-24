@@ -1,53 +1,84 @@
-## installation  
-## 1.Clone GitHub repo for this project locally
-If the project is hosted on github, we can use git on your local computer to clone it from github onto your local computer.
+# Sistema de Matriculados
 
-    git clone (https://github.com/YamilCr/sistema-matriculados.git)
-## 2. cd into your project
+Sistema web para administrar el padrón de un colegio profesional: matriculados, usuarios de acceso, estados de cuenta, ubicaciones y reportes. Proyecto de portfolio — todos los datos de la demo son ficticios.
 
-    cd directorio/de/la/carpeta
-    
-## 3. Install Composer Dependencies
-Whenever you clone a new Laravel project you must now install all of the project dependencies. This is what actually installs Laravel itself, among other necessary packages to get started.
+**Stack:** Laravel 12 · Inertia.js · Vue 3 + TypeScript · Tailwind CSS 4 · Fortify (auth + 2FA) · Pest · SQLite (o MySQL)
 
-When we run composer, it checks the composer.json file which is submitted to the github repo and lists all of the composer (PHP) packages that your repo requires. Because these packages are constantly changing, the source code is generally not submitted to github, but instead we let composer handle these updates. So to install all this source code we run composer with the following command.
+## Qué incluye
 
-    composer install
+| Módulo | Admin | Staff | Matriculado |
+|---|:-:|:-:|:-:|
+| Panel con estadísticas reales (total, morosos, usuarios activos) | ✅ | ✅ | — |
+| **Matriculados**: alta, edición, baja, búsqueda por matrícula/nombre/DNI/email, foto | ✅ (con baja) | ✅ (sin baja) | — |
+| **Reportes**: por matriculados, ubicación, estados y personalizado, con exportación CSV / Excel | ✅ | ✅ | — |
+| **Usuarios** del sistema: alta, edición, activar/desactivar, baja | ✅ | — | — |
+| **Provincias**, **Ciudades** y **Estados de cuenta**: ABM completo | ✅ | — | — |
+| Credencial digital descargable en PDF | — | — | ✅ |
 
-## 4. Install NPM Dependencies
-   Just like how we must install composer packages to move forward, we must also install necessary NPM packages to move forward. This will install Vue.js, Bootstrap.css, Lodash, and Laravel Mix.
+Reglas de negocio destacadas:
 
-This is just like step 4, where we installed the composer PHP packages, but this is installing the Javascript (or Node) packages required. The list of packages that a repo requires is listed in the packages.json file which is submitted to the github repo. Just like in step 4, we do not commit the source code for these packages to version control (github) and instead we let NPM handle it.
+- Al crear un matriculado se crea su usuario de acceso en una transacción (contraseña inicial = DNI).
+- Selects dependientes provincia → ciudad, y el servidor valida que la ciudad pertenezca a la provincia.
+- No se puede eliminar una provincia, ciudad o estado que tenga matriculados asociados.
+- Los usuarios desactivados no pueden iniciar sesión; un admin no puede desactivarse, eliminarse ni quitarse el rol a sí mismo.
+- Registro público deshabilitado: las cuentas las crea un Admin o Staff.
 
-    npm install
+## Cuentas de prueba
 
-or if you prefer yarn (as i do)
+| Rol | Email | Contraseña |
+|---|---|---|
+| Administrador | `admin@sistema.com` | `admin123` |
+| Personal (Staff) | `staff@sistema.com` | `staff123` |
+| Matriculado | `juan@matriculado.com` | `juan123` |
 
-    yarn  
-## 5. Create a copy of your .env file
-.env files are not generally committed to source control for security reasons. But there is a .env.example which is a template of the .env file that the project expects us to have. So we will make a copy of the .env.example file and create a .env file that we can start to fill out to do things like database configuration in the next few steps.
+La base se siembra con 36 matriculados repartidos en varias provincias y estados (los datos son siempre los mismos, sin aleatoriedad).
 
-    cp .env.example .env
+## Instalación
 
-This will create a copy of the .env.example file in your project and name the copy simply .env.
+Requisitos: PHP 8.2+, Composer, Node 20+.
 
-## 6 Create an empty database for our application
-Create an empty database for your project using the database tools you prefer (My favorite is SequelPro for mac). In our example we created a database called “test”. Just create an empty database here, the exact steps will depend on your system setup.
+```bash
+git clone https://github.com/YamilCr/sistema-matriculados.git
+cd sistema-matriculados
 
-## 7. In the .env file, add database information to allow Laravel to connect to the database
-We will want to allow Laravel to connect to the database that you just created in the previous step. To do this, we must add the connection credentials in the .env file and Laravel will handle the connection from there.
+composer install
+npm install
 
-In the .env file fill in the DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, and DB_PASSWORD options to match the credentials of the database you just created. This will allow us to run migrations and seed the database in the next step.
+cp .env.example .env
+php artisan key:generate
 
-## 8. Migrate the database
-Once your credentials are in the .env file, now you can migrate your database.
+# Base de datos (SQLite, sin configurar nada más)
+touch database/database.sqlite
+# En .env: DB_CONNECTION=sqlite
 
-php artisan migrate
-It’s not a bad idea to check your database to make sure everything migrated the way you expected.
+php artisan migrate --seed
+php artisan storage:link        # para las fotos de perfil
 
-## 9. Seed the database
+npm run build                   # o `npm run dev` para desarrollo
+php artisan serve
+```
 
-    php artisan db:seed
+Abrí http://127.0.0.1:8000 e ingresá con alguna de las cuentas de prueba.
 
-## 10. Open the app in your browser
-    
+Para resetear la demo a su estado inicial: `php artisan migrate:fresh --seed`.
+
+### Usar MySQL en lugar de SQLite
+
+Creá la base y completá `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD` en `.env`.
+
+## Tests
+
+```bash
+npm run build        # los tests de páginas necesitan el manifest de Vite
+php artisan test
+```
+
+Cubren autenticación, permisos por rol, el ABM de tablas maestras, matriculados y usuarios.
+
+## Estructura útil
+
+- `routes/web.php` — rutas agrupadas por rol (`auth`, `staff`, `admin`).
+- `app/Http/Controllers/` — un controlador por módulo.
+- `resources/js/pages/` — páginas Inertia; `components/master/MasterCrud.vue` es el ABM reutilizable de las tablas maestras.
+- `resources/js/lib/exportData.ts` — exportación a CSV / Excel.
+- `database/seeders/` — datos de la demo.

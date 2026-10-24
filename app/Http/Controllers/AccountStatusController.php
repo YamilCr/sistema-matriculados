@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountStatus;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AccountStatusController extends Controller
@@ -11,29 +12,40 @@ class AccountStatusController extends Controller
     public function index()
     {
         return Inertia::render('AccountStatuses/Index', [
-            'statuses' => AccountStatus::all()
+            'statuses' => AccountStatus::withCount('members')->orderBy('id')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:account_statuses',
-            'description' => 'nullable|string',
-        ]);
+        AccountStatus::create($this->validated($request));
 
-        AccountStatus::create($validated);
         return redirect()->back()->with('message', 'Estado creado.');
     }
 
     public function update(Request $request, AccountStatus $accountStatus)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:account_statuses,name,' . $accountStatus->id,
-            'description' => 'nullable|string',
-        ]);
+        $accountStatus->update($this->validated($request, $accountStatus));
 
-        $accountStatus->update($validated);
         return redirect()->back()->with('message', 'Estado actualizado.');
+    }
+
+    public function destroy(AccountStatus $accountStatus)
+    {
+        if ($accountStatus->members()->exists()) {
+            return redirect()->back()->with('error', 'No se puede eliminar: hay matriculados con este estado.');
+        }
+
+        $accountStatus->delete();
+
+        return redirect()->back()->with('message', 'Estado eliminado.');
+    }
+
+    private function validated(Request $request, ?AccountStatus $status = null): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('account_statuses', 'name')->ignore($status?->id)],
+            'description' => ['nullable', 'string', 'max:255'],
+        ]);
     }
 }

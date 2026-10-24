@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { dashboard } from '@/routes'
+import admin from '@/routes/admin'
 import { type BreadcrumbItem } from '@/types'
-import { Head, router, usePage} from '@inertiajs/vue3'
-import { ref, computed , watch} from 'vue'
-import { route } from 'ziggy-js'
+import { Head, router } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
 import MemberModal from '@/pages/Member/Show.vue'
 import MemberEditModal from '@/pages/Member/Edit.vue'
 import MemberCreateModal from '@/pages/Member/Create.vue' 
 import Swal from 'sweetalert2' 
-import members from '@/routes/members'
+import membersRoutes from '@/routes/members'
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Matriculados', href: dashboard().url },
+  { title: 'Inicio', href: dashboard().url },
+  { title: 'Matriculados', href: admin.search().url },
 ]
 
 
@@ -30,6 +31,9 @@ interface Member {
   dni: string     // Nuevo
   address: string // Nuevo
   image?: string  // Nuevo (opcional)
+  province_id?: number
+  city_id?: number
+  account_status_id?: number
 }
 
 // Props que recibirías desde el controlador
@@ -37,64 +41,13 @@ interface Props {
   members: Member[]
   cities: Array<{ id: number; name: string; province_id: number }>
   provinces: Array<{ id: number; name: string }>
-  accountStatuses: Array<{ id: number; name: string }> // <--- Recibir esto
+  accountStatuses: Array<{ id: number; name: string }>
+  canDelete?: boolean // solo Admin puede dar de baja
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  members: () => [
-    /*{
-      id: 1,
-      enrollment_number: 'MAT-2024-001',
-      name: 'Juan Pérez',
-      email: 'juan@example.com',
-      phone: '+54 297 123-4567',
-      location: 'Comodoro Rivadavia',
-      province: 'Chubut',
-      status: 'active',
-      registration_date: '2024-01-15',
-      dni: '12345678',
-      address: 'Calle 1, 123'
-    },
-    {
-      id: 2,
-      enrollment_number: 'MAT-2024-002',
-      name: 'María González',
-      email: 'maria@example.com',
-      phone: '+54 297 234-5678',
-      location: 'Rada Tilly',
-      province: 'Chubut',
-      status: 'active',
-      registration_date: '2024-02-20',
-      dni: '23456789',
-      address: 'Calle 2, 456'
-    },
-    {
-      id: 3,
-      enrollment_number: 'MAT-2024-003',
-      name: 'Carlos Rodríguez',
-      email: 'carlos@example.com',
-      phone: '+54 297 345-6789',
-      location: 'Comodoro Rivadavia',
-      province: 'Chubut',
-      status: 'inactive',
-      registration_date: '2024-03-10',
-      dni: '34567890',
-      address: 'Calle 3, 789'
-    },
-    {
-      id: 4,
-      enrollment_number: 'MAT-2024-004',
-      name: 'Ana Martínez',
-      email: 'ana@example.com',
-      phone: '+54 297 456-7890',
-      location: 'Caleta Olivia',
-      province: 'Chubut',
-      status: 'suspended',
-      registration_date: '2024-04-05',
-      dni: '45678901',
-      address: 'Calle 4, 012'
-    }
-  */]
+  members: () => [],
+  canDelete: false,
 })
 
 const showModal = ref(false)
@@ -102,60 +55,46 @@ const selectedMember = ref<Member | null>(null)
 const searchQuery = ref('')
 const showCreateModal = ref(false)
 
-// --- CONFIGURACIÓN DE ALERTAS (SWEETALERT) ---
-const page = usePage<any>();
-  
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  timer: 3000,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
-});
-
-// Detectar mensajes del backend automáticamente
-watch(() => page.props.flash?.message, (message) => {
-  if (message) {
-    Toast.fire({
-      icon: 'success',
-      title: message
-    });
-  }
-}, { deep: true });
-
-
 const filteredMembers = computed(() => {
-  if (!searchQuery.value) return props.members
-  
-  const query = searchQuery.value.toLowerCase()
-  return props.members.filter(member => 
-    member.enrollment_number.toLowerCase().includes(query) ||
-    member.name.toLowerCase().includes(query)
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return props.members
+
+  return props.members.filter((member) =>
+    [member.enrollment_number, member.name, member.dni, member.email]
+      .some((value) => String(value ?? '').toLowerCase().includes(query)),
   )
 })
 
+// Colores según el nombre del estado de cuenta
 const getStatusColor = (status: string) => {
-  const colors = {
-    active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    suspended: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+  const key = status.toLowerCase()
+  if (key.includes('día') || key.includes('dia') || key === 'activo') {
+    return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
   }
-  return colors[status as keyof typeof colors] || colors.inactive
+  if (key.includes('moroso')) {
+    return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+  }
+  if (key.includes('suspendido')) {
+    return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+  }
+  return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
 }
 
-const getStatusText = (status: string) => {
-  const texts = {
-    active: 'Activo',
-    inactive: 'Inactivo',
-    suspended: 'Suspendido'
-  }
-  return texts[status as keyof typeof texts] || status
-}
+const deleteMember = async (member: Member) => {
+  const result = await Swal.fire({
+    title: '¿Eliminar matriculado?',
+    text: `${member.name} (${member.enrollment_number}) y su usuario de acceso serán eliminados.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#dc2626',
+  })
 
+  if (result.isConfirmed) {
+    router.delete(membersRoutes.destroy(member.id).url, { preserveScroll: true })
+  }
+}
 
 const openCreateModal = () => {
   showCreateModal.value = true
@@ -200,7 +139,7 @@ const closeEditModal = () => {
   <Head title="Matriculados" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 max-w-7xl mx-auto">
+    <div class="p-6 w-full max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -233,7 +172,7 @@ const closeEditModal = () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Buscar por número de matrícula o nombre..."
+            placeholder="Buscar por matrícula, nombre, DNI o email..."
             class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -293,11 +232,11 @@ const closeEditModal = () => {
                   {{ member.phone }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  {{ member.city }}
+                  {{ member.city }}, {{ member.province }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span :class="[getStatusColor(member.status), 'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full']">
-                    {{ getStatusText(member.status) }}
+                    {{ member.status }}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
@@ -325,6 +264,18 @@ const closeEditModal = () => {
                     >
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+
+                    <!-- Eliminar (solo Admin) -->
+                    <button
+                      v-if="canDelete"
+                      @click="deleteMember(member)"
+                      class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                      title="Eliminar"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                       </svg>
                     </button>
                   </div>
@@ -364,6 +315,7 @@ const closeEditModal = () => {
         :show="showCreateModal"
         :provinces="props.provinces"
         :cities="props.cities"
+        :account-statuses="props.accountStatuses"
         @close="closeCreateModal"
     />
   </AppLayout>

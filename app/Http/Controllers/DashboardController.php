@@ -2,89 +2,95 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Member;
-use App\Models\User;
-use App\Models\Province;
-use App\Models\City;
 use App\Models\AccountStatus;
+use App\Models\City;
+use App\Models\Member;
+use App\Models\Province;
+use App\Models\User;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-   public function __invoke()
-{
-    $user = auth()->user();
+    private const ROLE_ADMIN = 1;
 
-    if ($user->role_id === 1 || $user->role_id === 3) {
-        return Inertia::render('Dashboard', [
-            'role' => $user->role_id === 1 ? 'admin' : 'staff',
-            'stats' => [
-                'total_members' => 1,
-                'active_users' => 1,
-                'morosos' => 3,
-            ],
-        ]);
-    }
+    private const ROLE_MEMBER = 2;
 
-    if ($user->role_id === 2) {
-        return Inertia::render('Dashboard', [
-            'role' => 'member',
-            'myMemberData' => \App\Models\Member::with(['province', 'accountStatus'])
-                ->findOrFail($user->member_id),
-        ]);
-    }
-    
+    private const ROLE_STAFF = 3;
 
-    abort(403);
-}
-// Método para la vista de reportes (solo para admin)
-        public function report()
-        {
-            return Inertia::render('report/Index');
-        }
-// Método para la búsqueda de matriculados (solo para admin)
-        public function searchMember()
-        {
-            $user = auth()->user();
+    public function __invoke()
+    {
+        $user = auth()->user();
 
-            // 1. Agregamos 'province' al with para que no de error al buscar el nombre
-            $members = Member::with(['city', 'province', 'accountStatus']) 
-                ->latest()
-                ->get()
-                ->map(function ($member) {
-                    return [
-                        'id' => $member->id,
-                        'enrollment_number' => $member->registration_number,
-                        'name' => $member->first_name . ' ' . $member->last_name,
-                        'first_name' => $member->first_name, // <--- Útil para el edit
-                        'last_name' => $member->last_name,   // <--- Útil para el edit
-                        'email' => $member->user ? $member->user->email : 'Sin usuario',
-                        'phone' => $member->phone,
-                        
-                        // Datos visuales (Texto)
-                        'city' => $member->city->name ?? 'N/A',
-                        'province' => $member->province->name ?? 'N/A', 
-                        'status' => $member->accountStatus->name ?? 'inactive',
-                        'registration_date' => $member->created_at->format('Y-m-d'),
-                        'dni' => $member->dni,
-                        'address' => $member->address,
-                        'image' => $member->image,
-                        'is_active' => $member->is_active, // Para el botón toggle
+        if (in_array($user->role_id, [self::ROLE_ADMIN, self::ROLE_STAFF], true)) {
+            $morosoId = AccountStatus::where('name', 'Moroso')->value('id');
 
-                        // 👇👇👇 AQUÍ ESTABA EL PROBLEMA: FALTABAN LOS IDs PARA EL MODAL 👇👇👇
-                        'province_id' => $member->province_id,          // El modal busca esto
-                        'city_id' => $member->city_id,                  // El modal busca esto
-                        'account_status_id' => $member->account_status_id, // El modal busca esto
-                    ];
-                });
-
-            return Inertia::render('Admin/Search', [   
-                'members' => $members, 
-                'provinces' => Province::select('id', 'name')->get(),
-                'cities' => City::select('id', 'name', 'province_id')->get(),
-                'accountStatuses' => \App\Models\AccountStatus::select('id', 'name')->get(),
+            return Inertia::render('Dashboard', [
+                'role' => $user->role_id === self::ROLE_ADMIN ? 'admin' : 'staff',
+                'stats' => [
+                    'total_members' => Member::count(),
+                    'active_users' => User::where('is_active', true)->count(),
+                    'morosos' => $morosoId ? Member::where('account_status_id', $morosoId)->count() : 0,
+                ],
             ]);
         }
 
+        if ($user->role_id === self::ROLE_MEMBER && $user->member_id) {
+            return Inertia::render('Dashboard', [
+                'role' => 'member',
+                'myMemberData' => Member::with(['city', 'province', 'accountStatus'])
+                    ->findOrFail($user->member_id),
+            ]);
+        }
+
+        abort(403);
+    }
+
+    /** Listado de matriculados con sus ABM (Admin y Staff). */
+    public function searchMember()
+    {
+        return Inertia::render('admin/Search', [
+            'members' => $this->membersPayload(),
+            'provinces' => Province::sortedByName(Province::select('id', 'name')->get()),
+            'cities' => City::sortedByName(City::select('id', 'name', 'province_id')->get()),
+            'accountStatuses' => AccountStatus::select('id', 'name')->orderBy('id')->get(),
+            'canDelete' => auth()->user()->role_id === self::ROLE_ADMIN,
+        ]);
+    }
+
+    /** Reportes calculados con datos reales (en el cliente, sobre este listado). */
+    public function report()
+    {
+        return Inertia::render('report/Index', [
+            'members' => $this->membersPayload(),
+            'statuses' => AccountStatus::select('id', 'name')->orderBy('id')->get(),
+            'provinces' => Province::sortedByName(Province::select('id', 'name')->get()),
+            'cities' => City::sortedByName(City::select('id', 'name', 'province_id')->get()),
+        ]);
+    }
+
+    private function membersPayload()
+    {
+        return Member::with(['city', 'province', 'accountStatus', 'user'])
+            ->latest()
+            ->get()
+            ->map(fn (Member $m) => [
+                'id' => $m->id,
+                'enrollment_number' => $m->registration_number,
+                'name' => $m->first_name.' '.$m->last_name,
+                'first_name' => $m->first_name,
+                'last_name' => $m->last_name,
+                'email' => $m->user?->email ?? 'Sin usuario',
+                'phone' => $m->phone,
+                'dni' => $m->dni,
+                'address' => $m->address,
+                'image' => $m->image,
+                'city' => $m->city?->name ?? 'N/A',
+                'province' => $m->province?->name ?? 'N/A',
+                'status' => $m->accountStatus?->name ?? 'Sin estado',
+                'registration_date' => $m->created_at->format('Y-m-d'),
+                'province_id' => $m->province_id,
+                'city_id' => $m->city_id,
+                'account_status_id' => $m->account_status_id,
+            ]);
+    }
 }

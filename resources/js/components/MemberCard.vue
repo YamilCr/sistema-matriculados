@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { exportToPdf } from '../PdfExport';
 
 const props = defineProps<{
   userName: string;
@@ -11,13 +10,16 @@ const props = defineProps<{
     account_status_id: number;
     account_status: { name: string };
     province: { name: string };
+    city?: { name: string } | null;
   }
 }>()
 
 const carnetRef = ref<HTMLElement | null>(null);
 
-const descargarCarnet = () => {
+const descargarCarnet = async () => {
     const nombreArchivo = `Carnet_${props.userName.replace(/\s+/g, '_')}.pdf`;
+    // jspdf/html2canvas pesan mucho: se cargan recién al descargar el carnet
+    const { exportToPdf } = await import('../PdfExport');
     exportToPdf(carnetRef.value, nombreArchivo);
 };
 </script>
@@ -92,7 +94,7 @@ const descargarCarnet = () => {
                                 </div>
                                 <div>
                                     <span class="block text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500">Jurisdicción</span>
-                                    <span class="text-sm font-bold text-gray-700 dark:text-slate-300">{{ member.province.name }}</span>
+                                    <span class="text-sm font-bold text-gray-700 dark:text-slate-300">{{ member.city?.name ? member.city.name + ', ' : '' }}{{ member.province.name }}</span>
                                 </div>
                             </div>
                         </div>

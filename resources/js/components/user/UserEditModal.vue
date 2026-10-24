@@ -71,7 +71,7 @@ const handleSubmit = () => {
     form.transform((data) => ({
         ...data,
         _method: 'PUT',
-    })).post((users.update(props.user.id)), {
+    })).post(users.update(props.user.id).url, {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {

@@ -4,62 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\Province;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class ProvinceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Inertia::render('Provinces/Index', [
+            'provinces' => Province::sortedByName(Province::withCount(['cities', 'members'])->get()),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:provinces,name'],
+        ]);
+
+        Province::create($validated);
+
+        return redirect()->back()->with('message', 'Provincia creada.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Province $province)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Province $province)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Province $province)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('provinces', 'name')->ignore($province->id)],
+        ]);
+
+        $province->update($validated);
+
+        return redirect()->back()->with('message', 'Provincia actualizada.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Province $province)
     {
-        //
+        if ($province->members()->exists()) {
+            return redirect()->back()->with('error', 'No se puede eliminar: hay matriculados en esta provincia.');
+        }
+
+        $province->delete(); // sus ciudades se eliminan en cascada
+
+        return redirect()->back()->with('message', 'Provincia eliminada.');
     }
 }

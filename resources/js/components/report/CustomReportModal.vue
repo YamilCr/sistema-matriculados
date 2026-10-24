@@ -1,164 +1,101 @@
-<!-- CustomReportModal.vue -->
 <script setup lang="ts">
-import Modal from '@/components/Modal.vue'
-import { ref } from 'vue'
+import ReportShell from '@/components/report/ReportShell.vue';
+import { exportCsv, exportExcel, memberColumns, type ReportMember } from '@/lib/exportData';
+import { computed, ref } from 'vue';
 
-interface Props {
-  show: boolean
-}
+const props = defineProps<{
+    show: boolean;
+    members: ReportMember[];
+    statuses: { id: number; name: string }[];
+    provinces: { id: number; name: string }[];
+}>();
+const emit = defineEmits<{ close: [] }>();
 
-defineProps<Props>()
-const emit = defineEmits<{ close: [] }>()
+const filters = ref({
+    dateFrom: '',
+    dateTo: '',
+    statusIds: [] as number[],
+    provinceIds: [] as number[],
+    columns: ['enrollment', 'name', 'email', 'status'] as string[],
+});
 
-const selectedFilters = ref({
-  dateFrom: '',
-  dateTo: '',
-  status: [] as string[],
-  locations: [] as string[],
-  columns: ['enrollment', 'name', 'email', 'status'] as string[]
-})
+// Si no se marca ningún estado/provincia, no se filtra por ese criterio
+const filtered = computed(() =>
+    props.members.filter((m) => {
+        const f = filters.value;
+        if (f.dateFrom && m.registration_date < f.dateFrom) return false;
+        if (f.dateTo && m.registration_date > f.dateTo) return false;
+        if (f.statusIds.length && !f.statusIds.includes(m.account_status_id)) return false;
+        if (f.provinceIds.length && !f.provinceIds.includes(m.province_id)) return false;
+        return true;
+    }),
+);
 
-const availableStatuses = ['Activo', 'Inactivo', 'Suspendido']
-const availableLocations = ['Comodoro Rivadavia', 'Rada Tilly', 'Caleta Olivia', 'Sarmiento']
-const availableColumns = [
-  { id: 'enrollment', label: 'N° Matrícula' },
-  { id: 'name', label: 'Nombre' },
-  { id: 'email', label: 'Email' },
-  { id: 'phone', label: 'Teléfono' },
-  { id: 'status', label: 'Estado' },
-  { id: 'location', label: 'Ubicación' },
-  { id: 'registration_date', label: 'Fecha de Registro' },
-]
+const selectedColumns = computed(() =>
+    Object.values(memberColumns).filter((c) => filters.value.columns.includes(c.key)),
+);
 
-const generateReport = () => {
-  console.log('Generando reporte con filtros:', selectedFilters.value)
-  // Aquí iría la lógica para generar el reporte
-  alert('Generando reporte personalizado...')
-}
+const canExport = computed(() => filtered.value.length > 0 && selectedColumns.value.length > 0);
+
+const reset = () => {
+    filters.value = { dateFrom: '', dateTo: '', statusIds: [], provinceIds: [], columns: ['enrollment', 'name', 'email', 'status'] };
+};
 </script>
 
 <template>
-  <Modal :show="show" max-width="4xl" @close="emit('close')">
-    <div class="p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Reporte Personalizado
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Configura los filtros y columnas para tu reporte
-          </p>
-        </div>
-        <button
-          @click="emit('close')"
-          class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-
-      <div class="space-y-6">
-        <!-- Filtro de fechas -->
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Rango de Fechas</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desde</label>
-              <input
-                v-model="selectedFilters.dateFrom"
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              />
+    <ReportShell :show="show" title="Reporte Personalizado" subtitle="Elegí filtros y columnas, y exportá el resultado" max-width="3xl" @close="emit('close')">
+        <div class="space-y-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Alta desde</label>
+                    <input v-model="filters.dateFrom" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Alta hasta</label>
+                    <input v-model="filters.dateTo" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+                </div>
             </div>
+
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hasta</label>
-              <input
-                v-model="selectedFilters.dateTo"
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              />
+                <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Estado de cuenta</p>
+                <div class="flex flex-wrap gap-3">
+                    <label v-for="s in statuses" :key="s.id" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input v-model="filters.statusIds" type="checkbox" :value="s.id" class="rounded" /> {{ s.name }}
+                    </label>
+                </div>
             </div>
-          </div>
+
+            <div>
+                <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Provincia</p>
+                <div class="grid max-h-32 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                    <label v-for="p in provinces" :key="p.id" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input v-model="filters.provinceIds" type="checkbox" :value="p.id" class="rounded" /> {{ p.name }}
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Columnas a incluir</p>
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <label v-for="c in memberColumns" :key="c.key" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input v-model="filters.columns" type="checkbox" :value="c.key" class="rounded" /> {{ c.label }}
+                    </label>
+                </div>
+            </div>
+
+            <p class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                El reporte incluirá <strong>{{ filtered.length }}</strong> de {{ members.length }} matriculados.
+            </p>
         </div>
 
-        <!-- Filtro de estados -->
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Estados</h3>
-          <div class="flex flex-wrap gap-2">
-            <label
-              v-for="status in availableStatuses"
-              :key="status"
-              class="flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <input
-                v-model="selectedFilters.status"
-                :value="status"
-                type="checkbox"
-                class="mr-2 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ status }}</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Filtro de ubicaciones -->
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Ubicaciones</h3>
-          <div class="flex flex-wrap gap-2">
-            <label
-              v-for="location in availableLocations"
-              :key="location"
-              class="flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <input
-                v-model="selectedFilters.locations"
-                :value="location"
-                type="checkbox"
-                class="mr-2 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ location }}</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Selección de columnas -->
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Columnas a Incluir</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <label
-              v-for="column in availableColumns"
-              :key="column.id"
-              class="flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <input
-                v-model="selectedFilters.columns"
-                :value="column.id"
-                type="checkbox"
-                class="mr-2 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ column.label }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Acciones -->
-      <div class="flex justify-end gap-3 mt-6">
-        <button
-          @click="emit('close')"
-          class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          @click="generateReport"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Generar Reporte
-        </button>
-      </div>
-    </div>
-  </Modal>
+        <template #actions>
+            <button class="rounded-lg px-4 py-2 text-gray-600 hover:underline dark:text-gray-300" @click="reset">Limpiar</button>
+            <button :disabled="!canExport" class="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50" @click="exportExcel(filtered, selectedColumns, 'reporte-personalizado')">
+                Exportar Excel
+            </button>
+            <button :disabled="!canExport" class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50" @click="exportCsv(filtered, selectedColumns, 'reporte-personalizado')">
+                Exportar CSV
+            </button>
+        </template>
+    </ReportShell>
 </template>

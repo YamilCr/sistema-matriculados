@@ -1,106 +1,53 @@
 <script setup lang="ts">
-  import AppLayout from '@/layouts/AppLayout.vue'
-  import { dashboard } from '@/routes'
-  import { type BreadcrumbItem } from '@/types'
-  import { Head } from '@inertiajs/vue3'
-  import { ref } from 'vue'
-  
-  // Importar los componentes de modales
-import StatusReportModal from '@/components/report/StatusReportModal.vue'
-import ExportReportModal from '@/components/report/ExportReportModal.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import { dashboard } from '@/routes'
+import { type BreadcrumbItem } from '@/types'
+import { Head } from '@inertiajs/vue3'
+import { ref } from 'vue'
+
 import CustomReportModal from '@/components/report/CustomReportModal.vue'
-import MembersReportModal from '@/components/report/MembersReportModal.vue'
-import FinancialReportModal from '@/components/report/FinancialReportModal.vue'
+import ExportReportModal from '@/components/report/ExportReportModal.vue'
 import LocationsReportModal from '@/components/report/LocationsReportModal.vue'
+import MembersReportModal from '@/components/report/MembersReportModal.vue'
+import StatusReportModal from '@/components/report/StatusReportModal.vue'
+import type { ReportMember } from '@/lib/exportData'
+
+defineProps<{
+  members: ReportMember[]
+  statuses: { id: number; name: string }[]
+  provinces: { id: number; name: string }[]
+  cities: { id: number; name: string; province_id: number }[]
+}>()
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Reportes', href: dashboard().url },
+  { title: 'Inicio', href: dashboard().url },
+  { title: 'Reportes', href: '/report' },
 ]
 
-interface Report {
-  id: string
-  title: string
-  description: string
-  icon: string
-  color: string
-  modalComponent: string
-}
+const reports = [
+  { id: 'members', title: 'Reporte de Matriculados', description: 'Lista completa de matriculados con su estado y ubicación', icon: '👥', color: 'bg-blue-500' },
+  { id: 'locations', title: 'Reporte por Ubicación', description: 'Matriculados agrupados por provincia y ciudad', icon: '📍', color: 'bg-purple-500' },
+  { id: 'status', title: 'Reporte de Estados', description: 'Cuántos matriculados hay al día, morosos o suspendidos', icon: '📊', color: 'bg-orange-500' },
+  { id: 'custom', title: 'Reporte Personalizado', description: 'Filtrá por fecha, estado y provincia, y elegí las columnas', icon: '⚙️', color: 'bg-gray-500' },
+  { id: 'export', title: 'Exportar Datos', description: 'Descargá el padrón completo en Excel o CSV', icon: '📥', color: 'bg-indigo-500' },
+]
 
-const reports = ref<Report[]>([
-  {
-    id: 'members',
-    title: 'Reporte de Matriculados',
-    description: 'Lista completa de miembros con filtros por estado, ubicación y fecha',
-    icon: '👥',
-    color: 'bg-blue-500',
-    modalComponent: 'members'
-  },
-  {
-    id: 'financial',
-    title: 'Reporte Financiero',
-    description: 'Ingresos, pagos pendientes y estado de cuentas',
-    icon: '💰',
-    color: 'bg-green-500',
-    modalComponent: 'financial'
-  },
-  {
-    id: 'locations',
-    title: 'Reporte por Ubicación',
-    description: 'Estadísticas de miembros agrupados por localidad',
-    icon: '📍',
-    color: 'bg-purple-500',
-    modalComponent: 'locations'
-  },
-  {
-    id: 'status',
-    title: 'Reporte de Estados',
-    description: 'Análisis de miembros activos, inactivos y suspendidos',
-    icon: '📊',
-    color: 'bg-orange-500',
-    modalComponent: 'status'
-  },
-  {
-    id: 'custom',
-    title: 'Reporte Personalizado',
-    description: 'Crea reportes personalizados con múltiples filtros',
-    icon: '⚙️',
-    color: 'bg-gray-500',
-    modalComponent: 'custom'
-  },
-  {
-    id: 'export',
-    title: 'Exportar Datos',
-    description: 'Descarga datos en formato Excel, PDF o CSV',
-    icon: '📥',
-    color: 'bg-indigo-500',
-    modalComponent: 'export'
-  }
-])
-
-// Estados para controlar qué modal está abierto
 const activeModal = ref<string | null>(null)
-
-const openModal = (modalComponent: string) => {
-  activeModal.value = modalComponent
-}
-
-const closeModal = () => {
-  activeModal.value = null
-}
+const closeModal = () => { activeModal.value = null }
 </script>
 
 <template>
   <Head title="Reportes" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 max-w-7xl mx-auto">
+    <div class="p-6 w-full max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
           Reportes del Sistema
         </h1>
         <p class="mt-2 text-gray-600 dark:text-gray-400">
-          Selecciona el tipo de reporte que deseas generar
+          Los reportes se calculan con los datos actuales del sistema
         </p>
       </div>
 
@@ -109,7 +56,7 @@ const closeModal = () => {
         <div
           v-for="report in reports"
           :key="report.id"
-          @click="openModal(report.modalComponent)"
+          @click="activeModal = report.id"
           class="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-200 dark:border-gray-700 overflow-hidden group"
         >
           <!-- Color Bar -->
@@ -143,63 +90,13 @@ const closeModal = () => {
         </div>
       </div>
 
-      <!-- Sección de Accesos Rápidos -->
-      <div class="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 border border-blue-200 dark:border-gray-600">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Accesos Rápidos
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <button
-            class="flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
-          >
-            <span class="mr-2">📅</span>
-            Último reporte generado
-          </button>
-          <button
-            class="flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
-          >
-            <span class="mr-2">🔔</span>
-            Reportes programados
-          </button>
-          <button
-            class="flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
-          >
-            <span class="mr-2">📂</span>
-            Historial de reportes
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Modales -->
-    <MembersReportModal 
-      :show="activeModal === 'members'" 
-      @close="closeModal" 
-    />
-    
-    <FinancialReportModal 
-      :show="activeModal === 'financial'" 
-      @close="closeModal" 
-    />
-    
-    <LocationsReportModal 
-      :show="activeModal === 'locations'" 
-      @close="closeModal" 
-    />
-
-    <StatusReportModal 
-      :show="activeModal === 'status'" 
-      @close="closeModal" 
-    />
-    
-    <CustomReportModal 
-      :show="activeModal === 'custom'" 
-      @close="closeModal" 
-    />
-    
-    <ExportReportModal 
-      :show="activeModal === 'export'" 
-      @close="closeModal" 
-    />
+    <MembersReportModal :show="activeModal === 'members'" :members="members" @close="closeModal" />
+    <LocationsReportModal :show="activeModal === 'locations'" :members="members" :statuses="statuses" @close="closeModal" />
+    <StatusReportModal :show="activeModal === 'status'" :members="members" :statuses="statuses" @close="closeModal" />
+    <CustomReportModal :show="activeModal === 'custom'" :members="members" :statuses="statuses" :provinces="provinces" @close="closeModal" />
+    <ExportReportModal :show="activeModal === 'export'" :members="members" @close="closeModal" />
   </AppLayout>
 </template>

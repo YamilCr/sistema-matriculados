@@ -93,7 +93,7 @@ const submit = () => {
     form.transform((data) => ({
         ...data,
         _method: 'PUT',
-    })).post((members.update(props.member.id)), { 
+    })).post(members.update(props.member.id).url, { 
         forceFormData: true, 
         preserveScroll: true,
         onSuccess: () => {

@@ -12,7 +12,8 @@ import Swal from 'sweetalert2'
 
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Usuarios', href: dashboard().url },
+  { title: 'Inicio', href: dashboard().url },
+  { title: 'Usuarios', href: users.index().url },
 ]
 
 interface Role {
@@ -22,6 +23,8 @@ interface Role {
 
 interface Member {
   id: number
+  name: string
+  enrollment_number: string
   first_name: string
   last_name: string
   image?: string
@@ -50,9 +53,9 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   users: () => [],
   roles: () => [
-    { id: 1, name: 'Admin' },
-    { id: 2, name: 'Member' },
-    { id: 3, name: 'Staff' }
+    { id: 1, name: 'Administrador' },
+    { id: 2, name: 'Matriculado' },
+    { id: 3, name: 'Personal' }
   ],
   members: () => []
 })
@@ -151,30 +154,27 @@ const toggleUserStatus = (userId: number, currentStatus: boolean) => {
   }).then((result) => {
     if (result.isConfirmed) {
       
-      // Aquí llamamos a la ruta usando router de Inertia
-      // Asegúrate de que tu ruta en Laravel se llame 'users.toggle.status'
-        router.patch((users.toggle.status(userId)), {
-        preserveScroll: true,
-        onSuccess: () => {
-          // Opcional: Mostrar alerta de éxito
-          Swal.fire({
-            title: '¡Listo!',
-            text: `Usuario ${currentStatus ? 'desactivado' : 'activado'} correctamente.`,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false,
-            background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#fff',
-            color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
-          })
-        },
-        onError: () => {
-          Swal.fire({
-            title: 'Error',
-            text: 'No se pudo cambiar el estado.',
-            icon: 'error'
-          })
-        }
-      })
+      // El mensaje de éxito/error lo muestra el toast global (flash del backend)
+      router.patch(users.toggle.status(userId).url, {}, { preserveScroll: true })
+    }
+  })
+}
+
+const deleteUser = (user: User) => {
+  Swal.fire({
+    title: '¿Eliminar usuario?',
+    text: `Se eliminará el acceso de ${user.name}. Esta acción no se puede deshacer.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      router.delete(users.destroy(user.id).url, { preserveScroll: true })
     }
   })
 }
@@ -190,7 +190,7 @@ const clearFilters = () => {
   <Head title="Gestión de Usuarios" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 max-w-7xl mx-auto">
+    <div class="p-6 w-full max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -425,6 +425,17 @@ const clearFilters = () => {
                       </svg>
                       <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </button>
+
+                    <!-- Eliminar -->
+                    <button
+                      @click="deleteUser(user)"
+                      class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                      title="Eliminar"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                       </svg>
                     </button>
                   </div>

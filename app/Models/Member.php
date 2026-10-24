@@ -20,6 +20,19 @@ class Member extends Model
         'account_status_id',
     ];
 
+    /** Se incluyen al serializar para que el front pueda mostrar nombre y matrícula. */
+    protected $appends = ['name', 'enrollment_number'];
+
+    public function getNameAttribute(): string
+    {
+        return trim($this->first_name.' '.$this->last_name);
+    }
+
+    public function getEnrollmentNumberAttribute(): string
+    {
+        return (string) $this->registration_number;
+    }
+
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id');

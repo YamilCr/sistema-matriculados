@@ -1,62 +1,112 @@
 <script setup lang="ts">
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 import { Head, Link } from '@inertiajs/vue3';
 
-withDefaults(
-    defineProps<{
-        canRegister: boolean;
-    }>(),
-    {
-        canRegister: true,
-    },
-);
+const features = [
+    { icon: '👥', title: 'Padrón de matriculados', text: 'Alta, edición, baja y búsqueda con foto, DNI, domicilio y estado de cuenta.' },
+    { icon: '🔐', title: 'Roles y permisos', text: 'Admin, Staff y Matriculado, cada uno con su propio panel y alcance.' },
+    { icon: '📍', title: 'Provincias y ciudades', text: 'Tablas maestras con ABM y selects dependientes provincia → ciudad.' },
+    { icon: '📊', title: 'Reportes y exportación', text: 'Estadísticas por estado y ubicación, con exportación a CSV y Excel.' },
+];
+
+const demoAccounts = [
+    { role: 'Administrador', email: 'admin@sistema.com', password: 'admin123', note: 'Acceso total' },
+    { role: 'Personal', email: 'staff@sistema.com', password: 'staff123', note: 'Matriculados y reportes' },
+    { role: 'Matriculado', email: 'juan@matriculado.com', password: 'juan123', note: 'Ve su credencial' },
+];
 </script>
 
 <template>
-    <Head title="Welcome">
-        <link rel="preconnect" href="https://rsms.me/" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-    </Head>
-    <div
-        class="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]"
-    >
-        <header
-            class="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl z-10"
-        >
-            <nav class="flex items-center justify-end gap-4">
+    <Head title="Bienvenido" />
+    <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0a0a0a] dark:text-slate-100">
+        <header class="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+            <span class="text-sm font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                Sistema de Matriculados
+            </span>
+            <nav>
                 <Link
                     v-if="$page.props.auth.user"
                     :href="dashboard()"
-                    class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
+                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
                 >
-                    Dashboard
+                    Ir al panel
                 </Link>
-                <template v-else>
-                    <Link
-                        :href="login()"
-                        class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                    >
-                        Log in
-                    </Link>
-                    <Link
-                        v-if="canRegister"
-                        :href="register()"
-                        class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                    >
-                        Register
-                    </Link>
-                </template>
+                <Link
+                    v-else
+                    :href="login()"
+                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                >
+                    Iniciar sesión
+                </Link>
             </nav>
         </header>
-        <div
-            class="insolate flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0"
-        >
-        <main
-        class="isolate bg-gray-900 py-24 sm:py-32 max-w-[335px] flex-col-reverse overflow-hidden rounded-lg lg:max-w-4xl lg:flex-row"
-        >
-        <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=focalpoint&fp-y=.8&w=2830&h=1500&q=80&blend=111827&sat=-100&exp=15&blend-mode=multiply" alt="" class="absolute inset-0 z-0 w-full h-full object-cover object-right md:object-center" /> 
-            </main>
-        </div>
-        <div class="hidden h-14.5 lg:block"></div>
+
+        <main class="mx-auto max-w-5xl px-6 pb-16">
+            <section class="py-12 text-center sm:py-20">
+                <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl">
+                    Gestión de matrículas profesionales
+                </h1>
+                <p class="mx-auto mt-5 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
+                    Demo de un sistema web para administrar el padrón de un colegio profesional:
+                    matriculados, usuarios, estados de cuenta, ubicaciones y reportes.
+                    Hecho con Laravel, Inertia, Vue 3 y Tailwind.
+                </p>
+                <div class="mt-8 flex justify-center gap-3">
+                    <Link
+                        :href="$page.props.auth.user ? dashboard() : login()"
+                        class="rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow hover:bg-indigo-700"
+                    >
+                        Probar la demo
+                    </Link>
+                    <a
+                        href="https://github.com/YamilCr/sistema-matriculados"
+                        target="_blank"
+                        rel="noopener"
+                        class="rounded-lg border border-slate-300 px-6 py-3 font-semibold hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                    >
+                        Ver código
+                    </a>
+                </div>
+            </section>
+
+            <section class="grid gap-4 sm:grid-cols-2">
+                <div
+                    v-for="f in features"
+                    :key="f.title"
+                    class="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <div class="mb-3 text-3xl">{{ f.icon }}</div>
+                    <h3 class="font-bold">{{ f.title }}</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ f.text }}</p>
+                </div>
+            </section>
+
+            <section class="mt-10 rounded-2xl border border-indigo-200 bg-indigo-50 p-6 dark:border-indigo-900 dark:bg-indigo-950/40">
+                <h2 class="font-bold">Cuentas de prueba</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Entrá con cualquiera de estas cuentas para recorrer el sistema según cada rol.
+                </p>
+                <div class="mt-4 overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="text-xs uppercase text-slate-500">
+                            <tr>
+                                <th class="py-2 pr-4">Rol</th>
+                                <th class="py-2 pr-4">Email</th>
+                                <th class="py-2 pr-4">Contraseña</th>
+                                <th class="py-2">Qué puede hacer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="a in demoAccounts" :key="a.email" class="border-t border-indigo-100 dark:border-indigo-900">
+                                <td class="py-2 pr-4 font-semibold">{{ a.role }}</td>
+                                <td class="py-2 pr-4 font-mono">{{ a.email }}</td>
+                                <td class="py-2 pr-4 font-mono">{{ a.password }}</td>
+                                <td class="py-2">{{ a.note }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
     </div>
 </template>

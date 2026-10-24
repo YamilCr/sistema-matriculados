@@ -55,7 +55,7 @@ const closeModal = () => {
 }
 
 const handleSubmit = () => {
-  form.post(users.store(), {
+  form.post(users.store().url, {
     preserveScroll: true,
     onSuccess: () => {
       closeModal()

@@ -1,206 +1,77 @@
-<!-- StatusReportModal.vue -->
 <script setup lang="ts">
-import Modal from '@/components/Modal.vue'
-import { ref } from 'vue'
+import ReportShell from '@/components/report/ReportShell.vue';
+import { exportCsv, memberColumns, type ReportMember } from '@/lib/exportData';
+import { computed } from 'vue';
 
-interface Props {
-  show: boolean
-}
+const props = defineProps<{
+    show: boolean;
+    members: ReportMember[];
+    statuses: { id: number; name: string }[];
+}>();
+const emit = defineEmits<{ close: [] }>();
 
-defineProps<Props>()
-const emit = defineEmits<{ close: [] }>()
+const total = computed(() => props.members.length);
 
-const statusData = {
-  active: {
-    count: 198,
-    percentage: 80.8,
-    trend: '+5.2%',
-    trendUp: true
-  },
-  inactive: {
-    count: 32,
-    percentage: 13.1,
-    trend: '-2.1%',
-    trendUp: false
-  },
-  suspended: {
-    count: 15,
-    percentage: 6.1,
-    trend: '+1.3%',
-    trendUp: true
-  }
-}
+const summary = computed(() =>
+    props.statuses.map((s) => {
+        const count = props.members.filter((m) => m.account_status_id === s.id).length;
+        return { ...s, count, pct: total.value ? (count / total.value) * 100 : 0 };
+    }),
+);
 
-const monthlyTrend = [
-  { month: 'Enero', active: 185, inactive: 35, suspended: 12 },
-  { month: 'Febrero', active: 190, inactive: 34, suspended: 13 },
-  { month: 'Marzo', active: 195, inactive: 33, suspended: 14 },
-  { month: 'Abril', active: 198, inactive: 32, suspended: 15 },
-]
+// Los más recientes primero, para ver las últimas altas y su estado
+const recent = computed(() => props.members.slice(0, 8));
 
-const recentChanges = [
-  { id: 1, member: 'Juan Pérez', from: 'Inactivo', to: 'Activo', date: '2024-01-05', reason: 'Reactivación por pago' },
-  { id: 2, member: 'María González', from: 'Activo', to: 'Suspendido', date: '2024-01-04', reason: 'Falta de pago' },
-  { id: 3, member: 'Carlos Rodríguez', from: 'Suspendido', to: 'Activo', date: '2024-01-03', reason: 'Regularización' },
-]
+const barColor = (name: string) => {
+    const k = name.toLowerCase();
+    if (k.includes('moroso')) return 'bg-amber-500';
+    if (k.includes('suspendido')) return 'bg-red-500';
+    if (k.includes('día') || k.includes('dia')) return 'bg-green-500';
+    return 'bg-gray-400';
+};
+
+const columns = ['enrollment', 'name', 'status', 'registration_date'].map((k) => memberColumns[k]);
 </script>
 
 <template>
-  <Modal :show="show" max-width="6xl" @close="emit('close')">
-    <div class="p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Reporte de Estados
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Análisis detallado de estados de matriculados
-          </p>
-        </div>
-        <button
-          @click="emit('close')"
-          class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Cards de estados -->
-      <div class="grid grid-cols-3 gap-6 mb-8">
-        <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-700">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-green-600 dark:text-green-400">ACTIVOS</h3>
-            <span :class="[statusData.active.trendUp ? 'text-green-600' : 'text-red-600', 'text-xs font-semibold']">
-              {{ statusData.active.trend }}
-            </span>
-          </div>
-          <p class="text-4xl font-bold text-green-900 dark:text-green-200 mb-1">
-            {{ statusData.active.count }}
-          </p>
-          <p class="text-sm text-green-700 dark:text-green-300">
-            {{ statusData.active.percentage }}% del total
-          </p>
-          <div class="mt-4 bg-green-200 dark:bg-green-700 rounded-full h-2">
-            <div class="bg-green-500 dark:bg-green-400 rounded-full h-2" :style="`width: ${statusData.active.percentage}%`"></div>
-          </div>
+    <ReportShell :show="show" title="Reporte de Estados" subtitle="Cuántos matriculados hay en cada estado de cuenta" @close="emit('close')">
+        <div class="mb-6 space-y-4">
+            <div v-for="s in summary" :key="s.id">
+                <div class="mb-1 flex justify-between text-sm">
+                    <span class="font-medium text-gray-900 dark:text-white">{{ s.name }}</span>
+                    <span class="text-gray-600 dark:text-gray-400">{{ s.count }} ({{ s.pct.toFixed(1) }}%)</span>
+                </div>
+                <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div :class="[barColor(s.name), 'h-3 rounded-full transition-all']" :style="{ width: s.pct + '%' }"></div>
+                </div>
+            </div>
+            <p v-if="!total" class="text-sm text-gray-500">Todavía no hay matriculados.</p>
         </div>
 
-        <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 border-2 border-gray-200 dark:border-gray-600">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">INACTIVOS</h3>
-            <span :class="[statusData.inactive.trendUp ? 'text-green-600' : 'text-red-600', 'text-xs font-semibold']">
-              {{ statusData.inactive.trend }}
-            </span>
-          </div>
-          <p class="text-4xl font-bold text-gray-900 dark:text-gray-200 mb-1">
-            {{ statusData.inactive.count }}
-          </p>
-          <p class="text-sm text-gray-700 dark:text-gray-300">
-            {{ statusData.inactive.percentage }}% del total
-          </p>
-          <div class="mt-4 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-            <div class="bg-gray-500 dark:bg-gray-400 rounded-full h-2" :style="`width: ${statusData.inactive.percentage}%`"></div>
-          </div>
+        <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Últimas altas</h3>
+        <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th v-for="c in columns" :key="c.key" class="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">{{ c.label }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                    <tr v-for="m in recent" :key="m.id">
+                        <td v-for="c in columns" :key="c.key" class="px-4 py-2 text-sm text-gray-900 dark:text-white">{{ c.value(m) }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 rounded-lg p-6 border-2 border-red-200 dark:border-red-700">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-red-600 dark:text-red-400">SUSPENDIDOS</h3>
-            <span :class="[statusData.suspended.trendUp ? 'text-green-600' : 'text-red-600', 'text-xs font-semibold']">
-              {{ statusData.suspended.trend }}
-            </span>
-          </div>
-          <p class="text-4xl font-bold text-red-900 dark:text-red-200 mb-1">
-            {{ statusData.suspended.count }}
-          </p>
-          <p class="text-sm text-red-700 dark:text-red-300">
-            {{ statusData.suspended.percentage }}% del total
-          </p>
-          <div class="mt-4 bg-red-200 dark:bg-red-700 rounded-full h-2">
-            <div class="bg-red-500 dark:bg-red-400 rounded-full h-2" :style="`width: ${statusData.suspended.percentage}%`"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tendencia mensual -->
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tendencia Mensual</h3>
-      <div class="overflow-x-auto mb-6">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead class="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mes</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Activos</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Inactivos</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Suspendidos</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="(data, index) in monthlyTrend" :key="index">
-              <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ data.month }}</td>
-              <td class="px-4 py-3 text-sm text-center text-green-600 dark:text-green-400 font-semibold">{{ data.active }}</td>
-              <td class="px-4 py-3 text-sm text-center text-gray-600 dark:text-gray-400">{{ data.inactive }}</td>
-              <td class="px-4 py-3 text-sm text-center text-red-600 dark:text-red-400 font-semibold">{{ data.suspended }}</td>
-              <td class="px-4 py-3 text-sm text-center text-gray-900 dark:text-white font-semibold">
-                {{ data.active + data.inactive + data.suspended }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Cambios recientes -->
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cambios Recientes de Estado</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead class="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Fecha</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Matriculado</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Estado Anterior</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Estado Nuevo</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Motivo</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="change in recentChanges" :key="change.id">
-              <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ change.date }}</td>
-              <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ change.member }}</td>
-              <td class="px-4 py-3 text-sm">
-                <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                  {{ change.from }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-sm">
-                <span :class="[
-                  change.to === 'Activo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                  change.to === 'Suspendido' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                  'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                  'px-2 py-1 rounded-full text-xs font-medium'
-                ]">
-                  {{ change.to }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ change.reason }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Acciones -->
-      <div class="flex justify-end gap-3 mt-6">
-        <button
-          @click="emit('close')"
-          class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          Cerrar
-        </button>
-        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          Exportar PDF
-        </button>
-      </div>
-    </div>
-  </Modal>
+        <template #actions>
+            <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700" @click="exportCsv(summary, [
+                { key: 'name', label: 'Estado', value: (r) => r.name },
+                { key: 'count', label: 'Cantidad', value: (r) => r.count },
+                { key: 'pct', label: 'Porcentaje', value: (r) => r.pct.toFixed(1) + '%' },
+            ], 'reporte-estados')">
+                Exportar CSV
+            </button>
+        </template>
+    </ReportShell>
 </template>

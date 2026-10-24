@@ -45,3 +45,41 @@ function something()
 {
     // ..
 }
+
+/*
+|--------------------------------------------------------------------------
+| Helpers de la demo
+|--------------------------------------------------------------------------
+*/
+
+/** Carga roles, estados, provincias y ciudades (los IDs de rol son 1=Admin, 2=Member, 3=Staff). */
+function seedCatalogs(): void
+{
+    test()->seed([
+        Database\Seeders\RoleSeeder::class,
+        Database\Seeders\AccountStatusSeeder::class,
+        Database\Seeders\ProvinceSeeder::class,
+        Database\Seeders\CitySeeder::class,
+    ]);
+}
+
+function userWithRole(int $roleId, array $attributes = []): App\Models\User
+{
+    return App\Models\User::factory()->withoutTwoFactor()->create($attributes + ['role_id' => $roleId, 'is_active' => true]);
+}
+
+function makeMember(array $attributes = []): App\Models\Member
+{
+    $city = App\Models\City::first();
+
+    return App\Models\Member::create($attributes + [
+        'registration_number' => 'MAT-'.fake()->unique()->numerify('####'),
+        'first_name' => 'Ana',
+        'last_name' => 'Prueba',
+        'dni' => (string) fake()->unique()->numberBetween(10000000, 99999999),
+        'address' => 'Calle Falsa 123',
+        'city_id' => $city->id,
+        'province_id' => $city->province_id,
+        'account_status_id' => App\Models\AccountStatus::first()->id,
+    ]);
+}

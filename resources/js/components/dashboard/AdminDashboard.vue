@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3'
-import admin from '@/routes/admin'
+import { computed } from 'vue'
+import accountstatuses from '@/routes/accountstatuses'
+import provinces from '@/routes/provinces'
+import cities from '@/routes/cities'
+import report from '@/routes/report'
+import members from '@/routes/members'
 import users from '@/routes/users'
+import admin from '@/routes/admin'
 // Nota: Para los iconos puedes usar librerías como Lucide-Vue-Next o Heroicons
 // Aquí simularemos los espacios para iconos para mantener el código limpio.
 
@@ -9,7 +15,7 @@ const { auth } = usePage().props as {
   auth: { user: { name: string, image: string } }
 }
 
-defineProps<{
+const props = defineProps<{
   stats: {
     total_members: number
     active_users: number
@@ -18,10 +24,16 @@ defineProps<{
   role: 'admin' | 'staff'
 }>()
 
-const menuItems = [
-  { name: 'Matriculados', href: admin.search(), icon: '👥', color: 'bg-blue-500' },
-  { name: 'Usuarios', href: users.index(), icon: '🔐', color: 'bg-purple-500' },
+const allItems = [
+  { name: 'Matriculados', href: admin.search(), icon: '👥', color: 'bg-blue-500', adminOnly: false },
+  { name: 'Reportes', href: report.index(), icon: '📊', color: 'bg-rose-500', adminOnly: false },
+  { name: 'Usuarios', href: users.index(), icon: '🔐', color: 'bg-purple-500', adminOnly: true },
+  { name: 'Provincias', href: provinces.index(), icon: '🗺️', color: 'bg-teal-500', adminOnly: true },
+  { name: 'Ciudades', href: cities.index(), icon: '📍', color: 'bg-emerald-500', adminOnly: true },
+  { name: 'Estados de Cuenta', href: accountstatuses.index(), icon: '💳', color: 'bg-amber-500', adminOnly: true },
 ]
+
+const menuItems = computed(() => allItems.filter((i) => props.role === 'admin' || !i.adminOnly))
 </script>
 
 <template>
@@ -40,7 +52,7 @@ const menuItems = [
         <div class="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 font-bold">
           <!-- <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" /> -->
           <img v-if="auth.user.image" :src="'/storage/' + auth.user.image" class="h-full w-full object-cover rounded-xl" />
-          <div v-else-if="auth.user.image!">{{ auth.user.name.charAt(0) }}</div>
+          <div v-else>{{ auth.user.name.charAt(0).toUpperCase() }}</div>
         </div>
         <div>
           <p v-if="role === 'admin'" class="text-xs text-gray-500 font-medium">Super Usuario</p>
@@ -65,7 +77,7 @@ const menuItems = [
         </div>
 
         <div class="relative overflow-hidden bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 group hover:shadow-md transition-all sm:col-span-2 lg:col-span-1">
-          <dt class="text-sm font-semibold text-emerald-500">Usuarios en Línea</dt>
+          <dt class="text-sm font-semibold text-emerald-500">Usuarios Activos</dt>
           <dd class="mt-2 text-4xl font-black text-emerald-600">{{ stats.active_users.toLocaleString() }}</dd>
           <div class="absolute -right-2 -bottom-2 opacity-10 text-7xl font-black text-emerald-500">⚡</div>
         </div>
@@ -77,7 +89,7 @@ const menuItems = [
           Gestión del Sistema
         </h2>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link 
             v-for="item in menuItems" 
             :key="item.name"

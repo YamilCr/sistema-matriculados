@@ -1,13 +1,14 @@
 <?php
 
+use App\Http\Controllers\AccountStatusController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
-use App\Http\Controllers\MemberController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\LocationController; //supuestamente por que location controller no existe y me tira error ahi.
-use App\Http\Controllers\AccountStatusController;
-use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -15,44 +16,41 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-
-// Grupo 1: Cualquier usuario logueado (Admin o Matriculado)
+// Grupo 1: cualquier usuario logueado (Admin, Staff o Matriculado)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', DashboardController::class)
-        ->name('dashboard');
-
-    Route::get('/members', [MemberController::class, 'index'])
-        ->name('members.index');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 });
 
-
-/// Grupo 2: ACCESO COMPARTIDO (Admin y Staff)
-// Usamos el middleware 'staff' que acabamos de modificar para que acepte a ambos (IDs 1 y 3)
+// Grupo 2: acceso compartido (Admin y Staff)
 Route::middleware(['auth', 'staff'])->group(function () {
-    
-    // Gestión básica que el Staff puede hacer
-    Route::get('/members/create', [MemberController::class, 'create'])->name('members.create');
+    // El listado de matriculados vive en /admin/search
+    Route::get('/members', fn () => redirect()->route('admin.search'))->name('members.index');
+    Route::get('/admin/search', [DashboardController::class, 'searchMember'])->name('admin.search');
+
+    // Alta y modificación de matriculados
     Route::post('/members', [MemberController::class, 'store'])->name('members.store');
     Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
 
-    
-    // Búsqueda (Unificamos la ruta, sirve para ambos)
-    Route::get('/admin/search', [DashboardController::class, 'searchMember'])->name('admin.search');
-    
-    // Reportes (Si el staff puede ver reportes)
+    // Reportes
     Route::get('/report', [DashboardController::class, 'report'])->name('report.index');
 });
 
-// Grupo 3: SOLO ADMIN (Cosas delicadas que el Staff NO debe tocar)
+// Grupo 3: solo Admin (lo delicado que el Staff no debe tocar)
 Route::middleware(['auth', 'admin'])->group(function () {
-    // Gestión de usuarios del sistema (Crear otros admins o staff)
-    Route::resource('users', UserController::class);
-    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
-    ->name('users.toggle.status');
+    // Baja definitiva de matriculados
+    Route::delete('/members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
 
-    // Tablas maestras (Para que el staff no rompa la configuración)
-    Route::resource('locations', LocationController::class);
-    Route::resource('accountstatuses', AccountStatusController::class);
+    // Usuarios del sistema (admins, staff y matriculados con acceso)
+    Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+        ->name('users.toggle.status');
+
+    // Tablas maestras
+    Route::resource('provinces', ProvinceController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('cities', CityController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('accountstatuses', AccountStatusController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['accountstatuses' => 'accountStatus']);
 });
 
 require __DIR__.'/settings.php';

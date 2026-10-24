@@ -23,6 +23,7 @@ export type AppPageProps<
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
+    flash?: { message?: string | null; error?: string | null };
     sidebarOpen: boolean;
 };
 
@@ -31,6 +32,9 @@ export interface User {
     name: string;
     email: string;
     image?: string;
+    role_id?: number | null;
+    member_id?: number | null;
+    is_active?: boolean;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
