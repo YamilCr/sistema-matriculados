@@ -21,6 +21,7 @@ export type AppPageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     name: string;
+    demo?: boolean;
     quote: { message: string; author: string };
     auth: Auth;
     flash?: { message?: string | null; error?: string | null };

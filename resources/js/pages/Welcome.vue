@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { dashboard, login } from '@/routes';
+import { demoAccounts } from '@/lib/demoAccounts';
 import { Head, Link } from '@inertiajs/vue3';
 
 const features = [
@@ -9,11 +10,6 @@ const features = [
     { icon: '📊', title: 'Reportes y exportación', text: 'Estadísticas por estado y ubicación, con exportación a CSV y Excel.' },
 ];
 
-const demoAccounts = [
-    { role: 'Administrador', email: 'admin@sistema.com', password: 'admin123', note: 'Acceso total' },
-    { role: 'Personal', email: 'staff@sistema.com', password: 'staff123', note: 'Matriculados y reportes' },
-    { role: 'Matriculado', email: 'juan@matriculado.com', password: 'juan123', note: 'Ve su credencial' },
-];
 </script>
 
 <template>
@@ -81,7 +77,7 @@ const demoAccounts = [
                 </div>
             </section>
 
-            <section class="mt-10 rounded-2xl border border-indigo-200 bg-indigo-50 p-6 dark:border-indigo-900 dark:bg-indigo-950/40">
+            <section v-if="$page.props.demo" class="mt-10 rounded-2xl border border-indigo-200 bg-indigo-50 p-6 dark:border-indigo-900 dark:bg-indigo-950/40">
                 <h2 class="font-bold">Cuentas de prueba</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     Entrá con cualquiera de estas cuentas para recorrer el sistema según cada rol.

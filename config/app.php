@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Modo demo: muestra las cuentas de prueba en el login y reinicia los datos a diario.
+    | Dejalo en false en cualquier instalación real.
+    */
+    'demo' => (bool) env('APP_DEMO', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

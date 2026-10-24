@@ -51,3 +51,11 @@ test('active users can log in', function () {
 
     $this->assertAuthenticatedAs($user);
 });
+
+test('the login shows demo accounts only when demo mode is on', function () {
+    config(['app.demo' => true]);
+    $this->get(route('login'))->assertInertia(fn ($page) => $page->where('demo', true));
+
+    config(['app.demo' => false]);
+    $this->get(route('login'))->assertInertia(fn ($page) => $page->where('demo', false));
+});
