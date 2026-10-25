@@ -48,7 +48,7 @@ class DashboardController extends Controller
     /** Listado de matriculados con sus ABM (Admin y Staff). */
     public function searchMember()
     {
-        return Inertia::render('admin/Search', [
+        return Inertia::render('Admin/Search', [
             'members' => $this->membersPayload(),
             'provinces' => Province::sortedByName(Province::select('id', 'name')->get()),
             'cities' => City::sortedByName(City::select('id', 'name', 'province_id')->get()),
