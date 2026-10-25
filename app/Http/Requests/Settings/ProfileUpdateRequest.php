@@ -15,7 +15,8 @@ class ProfileUpdateRequest extends FormRequest
 
         return [
             // Reglas para TODOS los usuarios
-            'name' => ['required', 'string', 'max:255'],
+            // El matriculado no cambia su nombre: lo valida el colegio (viene de su ficha)
+            'name' => [$isMember ? 'nullable' : 'required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'string',
@@ -41,9 +42,10 @@ class ProfileUpdateRequest extends FormRequest
                 'exists:provinces,id'
             ],
             
+            // La ciudad debe pertenecer a la provincia elegida
             'city_id' => [
-                $isMember ? 'required' : 'nullable', 
-                'exists:cities,id'
+                $isMember ? 'required' : 'nullable',
+                Rule::exists('cities', 'id')->where('province_id', $this->input('province_id')),
             ],
         ];
     }
@@ -56,6 +58,7 @@ class ProfileUpdateRequest extends FormRequest
         return [
             'province_id.required' => 'La provincia es obligatoria para los matriculados.',
             'city_id.required' => 'La ciudad es obligatoria para los matriculados.',
+            'city_id.exists' => 'La ciudad elegida no pertenece a esa provincia.',
             'address.required' => 'El domicilio profesional es necesario para tu credencial.',
         ];
     }

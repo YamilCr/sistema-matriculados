@@ -15,7 +15,7 @@ import { computed } from 'vue'; // Importamos computed para que sea reactivo
 import { usePage } from '@inertiajs/vue3'; // Importante para acceder a auth
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { CreditCard, FileBarChart, Landmark, LayoutGrid, MapPin, ShieldCheck, Users } from 'lucide-vue-next';
+import { CreditCard, FileBarChart, Landmark, LayoutGrid, MapPin, ShieldCheck, UserRound, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import report from '@/routes/report';
 import admin from '@/routes/admin';
@@ -23,8 +23,10 @@ import users from '@/routes/users';
 import provinces from '@/routes/provinces';
 import cities from '@/routes/cities';
 import accountstatuses from '@/routes/accountstatuses';
+import { edit as editProfile } from '@/routes/profile';
 
 const ROLE_ADMIN = 1;
+const ROLE_MEMBER = 2;
 const ROLE_STAFF = 3;
 
 const page = usePage();
@@ -36,6 +38,11 @@ const mainNavItems = computed(() => {
     ];
 
     const roleId = user.value?.role_id;
+
+    // Matriculado: su credencial (Inicio) y sus datos de contacto
+    if (roleId === ROLE_MEMBER) {
+        items.push({ title: 'Mis datos', href: editProfile(), icon: UserRound });
+    }
 
     // Admin y Staff: matriculados y reportes
     if (roleId === ROLE_ADMIN || roleId === ROLE_STAFF) {

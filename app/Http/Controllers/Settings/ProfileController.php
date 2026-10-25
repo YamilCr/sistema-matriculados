@@ -19,7 +19,7 @@ class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         // Cargamos al miembro con sus datos actuales para que aparezcan en el formulario
-        $user = $request->user()->load('member');
+        $user = $request->user()->load('member.accountStatus');
 
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
@@ -36,6 +36,11 @@ class ProfileController extends Controller
         
         // 1. Actualizar datos de la tabla USERS (Nombre y Email)
         $user->fill($request->safe()->only(['name', 'email']));
+
+        // Matriculado: el nombre sale de su ficha y no se edita desde acá
+        if ($user->member) {
+            $user->name = trim($user->member->first_name.' '.$user->member->last_name);
+        }
 
         // Lógica de la imagen de usuario (Sidebar)
         if ($request->hasFile('image')) {
@@ -63,11 +68,14 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // Un matriculado no se da de baja solo: la baja la gestiona el colegio
+        abort_if($user->member_id !== null, 403, 'La baja de un matriculado la gestiona el colegio.');
+
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
-
-        $user = $request->user();
 
         Auth::logout();
 

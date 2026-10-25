@@ -110,9 +110,24 @@ const submit = () => {
         <SettingsLayout>
             <div class="flex flex-col space-y-8 animate-in fade-in duration-500 text-slate-900 dark:text-slate-100">
                 <HeadingSmall
-                    title="Información del Perfil"
-                    description="Actualiza tu información personal y profesional para tu credencial digital."
+                    :title="props.member ? 'Mis datos' : 'Información del Perfil'"
+                    :description="props.member ? 'Mantené actualizados tu contacto y domicilio profesional: son los que figuran en tu credencial.' : 'Actualiza tu información personal.'"
                 />
+
+                <div v-if="props.member" class="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-white/10 dark:bg-slate-900/50 md:grid-cols-3">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">N° de matrícula</p>
+                        <p class="font-semibold">{{ props.member.registration_number }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">DNI</p>
+                        <p class="font-semibold">{{ props.member.dni }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Estado de cuenta</p>
+                        <p class="font-semibold">{{ props.member.account_status?.name }}</p>
+                    </div>
+                </div>
 
                 <form @submit.prevent="submit" class="space-y-8">
                     <div class="flex flex-col md:flex-row md:items-center gap-6 border-b border-slate-100 dark:border-white/5 pb-8">
@@ -135,7 +150,8 @@ const submit = () => {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <Label for="name">Nombre Completo</Label>
-                            <Input id="name" v-model="form.name" class="dark:bg-slate-900 dark:border-white/10" />
+                            <Input id="name" v-model="form.name" :disabled="!!props.member" class="dark:bg-slate-900 dark:border-white/10 disabled:opacity-60" />
+                            <p v-if="props.member" class="text-xs text-slate-500 dark:text-slate-400">Tu nombre, DNI y matrícula los valida el colegio. Si hay un error, comunicate con el personal.</p>
                             <InputError :message="form.errors.name" />
                         </div>
                         <div class="space-y-2">
@@ -175,6 +191,7 @@ const submit = () => {
                                     <option :value="undefined" disabled>Seleccione provincia</option>
                                     <option v-for="p in provinces" :key="p.id" :value="p.id">{{ p.name }}</option>
                                 </select>
+                                <InputError :message="form.errors.province_id" />
                             </div>
 
                             <div class="space-y-2">
@@ -189,6 +206,7 @@ const submit = () => {
                                     </option>
                                     <option v-for="c in filteredCities" :key="c.id" :value="c.id">{{ c.name }}</option>
                                 </select>
+                                <InputError :message="form.errors.city_id" />
                             </div>
                         </div>
                     </div>
@@ -203,7 +221,7 @@ const submit = () => {
                     </div>
                 </form>
 
-                <DeleteUser />
+                <DeleteUser v-if="!props.member" />
             </div>
         </SettingsLayout>
     </AppLayout>
