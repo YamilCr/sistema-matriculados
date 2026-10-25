@@ -1,0 +1,22 @@
+# Blueprint de Render: crea el servicio web gratuito desde este repositorio.
+services:
+  - type: web
+    name: sistema-matriculados
+    runtime: docker
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: Sistema de Matriculados
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_DEMO
+        value: "true"
+      - key: APP_LOCALE
+        value: es
+      - key: APP_FAKER_LOCALE
+        value: es_AR
+      - key: DB_CONNECTION
+        value: sqlite

@@ -66,6 +66,21 @@ Para resetear la demo a su estado inicial: `php artisan migrate:fresh --seed`.
 
 Creá la base y completá `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD` en `.env`.
 
+## Despliegue en Render (demo online)
+
+El repositorio incluye `Dockerfile`, `docker/start.sh` y `render.yaml`, así que se publica sin configurar nada a mano:
+
+1. Subí el código a GitHub (rama `main` o la que quieras publicar).
+2. En [render.com](https://render.com) → **New +** → **Blueprint** → elegí este repositorio.
+3. Render lee `render.yaml`, construye la imagen (tarda unos minutos) y publica el servicio gratuito.
+4. Abrí la URL `https://sistema-matriculados-xxxx.onrender.com` y usá los botones de acceso rápido del login.
+
+Cómo funciona:
+
+- Usa **SQLite**: en cada inicio del servicio se recrea la base y se cargan los datos de ejemplo (`migrate:fresh --seed`), por lo que la demo siempre arranca limpia.
+- El plan gratuito **se duerme tras 15 minutos sin visitas** y la primera visita posterior tarda unos 30-50 segundos en despertarlo (y reinicia los datos de demo).
+- `APP_DEMO=true` activa los botones de acceso rápido. `APP_KEY` se genera sola al iniciar; si querés una fija, definila como variable de entorno en Render.
+
 ## Tests
 
 ```bash
