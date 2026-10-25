@@ -109,3 +109,8 @@ test('only admin can delete a member, and their user goes with them', function (
     expect(Member::count())->toBe(0)
         ->and(User::where('email', 'lucia@ejemplo.com')->exists())->toBeFalse();
 });
+
+test('a member cannot be saved with an account status outside the fixed list', function () {
+    $this->actingAs(userWithRole(3))->post(route('members.store'), memberPayload(['account_status_id' => 999]))
+        ->assertSessionHasErrors('account_status_id');
+});

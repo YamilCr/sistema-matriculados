@@ -48,9 +48,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Tablas maestras
     Route::resource('provinces', ProvinceController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('cities', CityController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('accountstatuses', AccountStatusController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->parameters(['accountstatuses' => 'accountStatus']);
+    // Estados de cuenta: datos fijos, solo consulta
+    Route::get('accountstatuses', [AccountStatusController::class, 'index'])->name('accountstatuses.index');
 });
 
 require __DIR__.'/settings.php';

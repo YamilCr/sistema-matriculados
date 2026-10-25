@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AccountStatus;
+use Illuminate\Support\Facades\Route;
 use App\Models\City;
 use App\Models\Province;
 
@@ -55,22 +56,17 @@ test('a city with members cannot be deleted', function () {
     expect(City::find($member->city_id))->not->toBeNull();
 });
 
-test('account statuses: create, update and delete', function () {
-    $this->post(route('accountstatuses.store'), ['name' => 'Jubilado', 'description' => 'Matrícula pasiva'])
-        ->assertSessionHasNoErrors();
-    $status = AccountStatus::where('name', 'Jubilado')->firstOrFail();
+test('account statuses are fixed: only the three system states exist', function () {
+    expect(AccountStatus::orderBy('id')->pluck('name')->all())->toBe(['Al día', 'Moroso', 'Suspendido']);
 
-    $this->put(route('accountstatuses.update', $status), ['name' => 'Retirado'])->assertSessionHasNoErrors();
-    expect($status->fresh()->name)->toBe('Retirado');
-
-    $this->delete(route('accountstatuses.destroy', $status));
-    expect(AccountStatus::find($status->id))->toBeNull();
+    $this->get(route('accountstatuses.index'))->assertOk();
 });
 
-test('an account status in use cannot be deleted', function () {
-    $member = makeMember();
+test('account statuses cannot be created, edited or deleted from the app', function () {
+    expect(Route::has('accountstatuses.store'))->toBeFalse()
+        ->and(Route::has('accountstatuses.update'))->toBeFalse()
+        ->and(Route::has('accountstatuses.destroy'))->toBeFalse();
 
-    $this->delete(route('accountstatuses.destroy', $member->account_status_id))->assertSessionHas('error');
-
-    expect(AccountStatus::find($member->account_status_id))->not->toBeNull();
+    $this->post('/accountstatuses', ['name' => 'Jubilado'])->assertStatus(405);
+    expect(AccountStatus::count())->toBe(3);
 });
