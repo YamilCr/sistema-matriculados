@@ -65,7 +65,7 @@ function seedCatalogs(): void
 
 function userWithRole(int $roleId, array $attributes = []): App\Models\User
 {
-    return App\Models\User::factory()->withoutTwoFactor()->create($attributes + ['role_id' => $roleId, 'is_active' => true]);
+    return App\Models\User::factory()->create($attributes + ['role_id' => $roleId, 'is_active' => true]);
 }
 
 function makeMember(array $attributes = []): App\Models\Member
